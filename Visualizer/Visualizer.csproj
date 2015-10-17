@@ -83,7 +83,10 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Extensions\Helpers.cs" />
+    <Compile Include="Service\CanvasToPngService.cs" />
     <Compile Include="Service\DrawService.cs" />
+    <Compile Include="Service\ICanvasExporter.cs" />
     <Compile Include="ViewModel\MainViewModel.cs" />
     <Compile Include="ViewModel\ViewModelLocator.cs" />
     <Compile Include="View\MainWindow.xaml.cs">

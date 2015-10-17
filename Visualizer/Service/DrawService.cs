@@ -28,6 +28,9 @@ namespace Visualizer.Service
         /// </summary>
         private readonly Canvas _drawCanvas;
 
+        public Canvas Canvas => _drawCanvas;
+
+
         /// <summary>
         /// Create a new DrawService and hook up the events
         /// </summary>
@@ -184,6 +187,18 @@ namespace Visualizer.Service
             _drawCanvas.Children.Add(polygon);
         }
 
+        public void DrawPolygon(Triangle t, Color c)
+        {
+            var plist = new List<Point>()
+            {
+                t.Point1,
+                t.Point2,
+                t.Point3
+            };
+
+            DrawPolygon(plist,c);
+        }
+
         public void DrawCell(Cell cell, Color c, bool bFill = true)
         {
             //Create polygon
@@ -191,7 +206,7 @@ namespace Visualizer.Service
             {
                 Stroke = new SolidColorBrush(Colors.Red),
                 Fill = new SolidColorBrush(c),
-                FillRule = FillRule.Nonzero,
+                FillRule = FillRule.EvenOdd,
                 StrokeThickness = 1
             };
             

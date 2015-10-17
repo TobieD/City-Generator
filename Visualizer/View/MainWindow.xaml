@@ -8,6 +8,7 @@
         Title="Voronoi Visualization" Height="600" Width="800" DataContext="{StaticResource Locator}">
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="20"/>
             <RowDefinition/>
             <RowDefinition Height="25"/>
         </Grid.RowDefinitions>
@@ -16,11 +17,20 @@
             <ColumnDefinition Width="185"/>
         </Grid.ColumnDefinitions>
 
+        <DockPanel Grid.RowSpan="2">
+            <Menu DockPanel.Dock="Top" BorderBrush="Black" BorderThickness="0,0,0,1" Margin="0">
+                <!-- Open new or save current -->
+                <MenuItem Header="File">
+                    <MenuItem Header="Export Png" Command="{Binding Main.ExportPngCommand}" />
+                </MenuItem>
+            </Menu>
+        </DockPanel>
+
         <!-- Visualization -->
-        <Canvas x:Name="cDrawCanvas" ClipToBounds="True" Background="White" Grid.Row="0" Grid.Column="0" />
+        <Canvas x:Name="cDrawCanvas" ClipToBounds="True" Grid.Row="1" Grid.Column="0" Grid.RowSpan="2" Background="#FFE1E1E1" />
 
         <!-- Settings for generating -->
-        <StackPanel Orientation="Vertical" Grid.Column="1" Background="#FFC8C8C8" Grid.Row="0" Grid.RowSpan="2">
+        <StackPanel Orientation="Vertical" Grid.Column="1" Background="#FFC8C8C8" Grid.Row="1" Grid.RowSpan="2">
 
             <Button Margin="5,2" Content="Reset" Command="{Binding Main.ClearCommand}" />
 
@@ -159,7 +169,7 @@
         </StackPanel>
 
         <!-- Generate Info -->
-        <StackPanel Grid.Row="1" Grid.Column="0" Orientation="Horizontal" Background="#FFC8C8C8">
+        <StackPanel Grid.Row="2" Grid.Column="0" Orientation="Horizontal" Background="#FFC8C8C8">
             <Label Content="{Binding Main.GenerationTimeText}"/>
         </StackPanel>
 

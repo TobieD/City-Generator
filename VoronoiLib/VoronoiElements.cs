@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Voronoi
 {
@@ -76,6 +76,10 @@ namespace Voronoi
     {
         public Point Point1;
         public Point Point2;
+
+
+        public Point Left;
+        public Point Right;
 
         public Line(Point p1, Point p2)
         {
@@ -173,7 +177,14 @@ namespace Voronoi
     /// </summary>
     public class Cell
     {
+        /// <summary>
+        /// the points that create the edges of the cell
+        /// </summary>
         public List<Point> Points;
+        /// <summary>
+        ///the point that the cell is build around
+        /// /// </summary>
+        public Point CellPoint;
 
         public Cell()
         {
@@ -193,6 +204,9 @@ namespace Voronoi
         public void AddPoint(Point p)
         { 
             Points.Add(p);
+
+            SortAlgorithms.ReferencePoint = CellPoint;
+            Points.Sort(new Comparison<Point>(SortAlgorithms.SortClockwise));
         }
 
         public void AddLine(Line l)
@@ -201,29 +215,48 @@ namespace Voronoi
             Points.Add(l.Point2);
         }
     }
+
+    internal static class SortAlgorithms
+    {
+        public static Point ReferencePoint ;
+
+        public static int SortClockwise(Point p1, Point p2)
+        {
+            var aTan1 = Math.Atan2(p1.Y - ReferencePoint.Y, p1.X - ReferencePoint.X);
+            var aTan2 = Math.Atan2(p2.Y - ReferencePoint.Y, p2.X - ReferencePoint.X);
+
+            if (aTan1 < aTan2) return -1;
+            else if (aTan1 > aTan2) return 1;
+
+            return 0;
+        }
+    }
     
     /// <summary>
     /// Stores all results of a voronoi Diagram
     /// </summary>
     public class VoronoiDiagram
     {
-        public List<Point> Points; //points used to generate the Voronoi Diagram 
+        public List<Point> Sites; //points used to generate the Voronoi Diagram 
         public List<Triangle> Triangulation; //possible triangulation required
-        public List<Line> Lines; //voronoi diagram in line format
-        public List<Cell> VoronoiCells; //voronou diagram in Cell format 
+        public List<Line> HalfEdges; //voronoi diagram in line format
+        public List<Cell> VoronoiCells; //voronoi diagram in Cell format 
+        public List<Point> VoronoiCellPoints; 
 
         public VoronoiDiagram()
         {
             Triangulation = new List<Triangle>();
-            Lines = new List<Line>();
+            HalfEdges = new List<Line>();
             VoronoiCells = new List<Cell>();
+            VoronoiCellPoints = new List<Point>();
         }
 
         public void Clear()
         {
             Triangulation.Clear();
-            Lines.Clear();   
+            HalfEdges.Clear();   
             VoronoiCells.Clear();
+            VoronoiCellPoints.Clear();
         }
     }
 }

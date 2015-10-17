@@ -5,6 +5,8 @@ using System.Linq;
 using System.Windows.Media;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
+using Microsoft.Win32;
+using Visualizer.Extensions;
 using Visualizer.Service;
 using Voronoi;
 
@@ -27,15 +29,19 @@ namespace Visualizer.ViewModel
             _drawService.ClearCanvas();
             Initialize(_drawService);
         }));
+
+        private RelayCommand _exportPngCommand;
+        public RelayCommand ExportPngCommand => _exportPngCommand ?? (_exportPngCommand = new RelayCommand(() => Export(new CanvasToPngService())));
+
         #endregion
 
         //Bindings
         #region Bindings    
-            
+
         /// <summary>
         /// Seed for random Generation of points
         /// </summary>
-        public  bool UseSeed { get; set; }
+        public bool UseSeed { get; set; }
         private int _seed = 0;
         public int Seed
         {
@@ -50,7 +56,7 @@ namespace Visualizer.ViewModel
         /// <summary>
         /// Amount of points to generate
         /// </summary>
-        private int _pointsToGenerate = 150;
+        private int _pointsToGenerate = 200;
         public int PointsToGenerate
         {
             get { return _pointsToGenerate; }
@@ -64,7 +70,7 @@ namespace Visualizer.ViewModel
         /// <summary>
         /// Size the point
         /// </summary>
-        private int _pointSize = 5;
+        private int _pointSize = 2;
         public int PointSize
         {
             get { return _pointSize; }
@@ -81,7 +87,7 @@ namespace Visualizer.ViewModel
         /// <summary>
         /// Settings of the bounds in which the points will be spawned
         /// </summary>
-        public int Width { get; set; } = 1500;
+        public int Width { get; set; } = 1600;
         public int Height { get; set; } = 950;
 
         /// <summary>
@@ -153,6 +159,11 @@ namespace Visualizer.ViewModel
 
             //seed for random generation
             Seed = DateTime.Now.GetHashCode();
+
+            #if DEBUG
+            //Seed = 0;
+            #endif
+
         }
 
         /// <summary>
@@ -168,7 +179,10 @@ namespace Visualizer.ViewModel
             var seed = UseSeed ? Seed : DateTime.Now.GetHashCode();
 
             //Generate Seed
-            _points = VoronoiCreator.GenerateRandomPoints(amount, _boundsStartPoint, Width, Height,Seed);
+            _points = VoronoiGenerator.GenerateRandomPoints((amount), _boundsStartPoint, Width, Height,Seed);
+
+            //generate additional points on the center
+            //_points.AddRange(VoronoiGenerator.GenerateRandomPoints((amount/2) - 4, new Point(_boundsStartPoint.X + Width/4, _boundsStartPoint.Y + Height/4), Width/2, Height/2, Seed));
 
             //update randomly generated seed
             if (UseSeed == false)
@@ -179,7 +193,7 @@ namespace Visualizer.ViewModel
             _points.Add(new Point(_boundsStartPoint.X + Width, _boundsStartPoint.Y));
             _points.Add(new Point(_boundsStartPoint.X, _boundsStartPoint.Y + Height));
             _points.Add(new Point(_boundsStartPoint.X + Width, _boundsStartPoint.Y + Height));
-
+        
             RefreshCanvas();
         }
 
@@ -194,18 +208,19 @@ namespace Visualizer.ViewModel
                 Console.WriteLine("No points available!");
                 return;
             }
+
+            //create voronoi using specified algorithm
             var timer = Stopwatch.StartNew();
-
-            //Create Voronoi
-            _voronoiDiagram = VoronoiCreator.CreateVoronoi(_points, VoronoiAlgorithm);
+            _voronoiDiagram = VoronoiGenerator.CreateVoronoi(_points, VoronoiAlgorithm);
             timer.Stop();
-
-            if (_voronoiDiagram == null)
-                return;
-            _voronoiDiagram.Points = _points;
 
             GenerationTime = timer.ElapsedMilliseconds / 1000.0;
 
+            if (_voronoiDiagram == null)
+                return;
+
+            _voronoiDiagram.Sites = _points;
+         
             //Update canvas
             RefreshCanvas();
         }
@@ -218,10 +233,9 @@ namespace Visualizer.ViewModel
             //clear canvas
             _drawService.ClearCanvas();
 
-            
-
-            var rng = new Random(DateTime.Now.GetHashCode());
-            var c = Color.FromRgb(50, 50, 50);
+            var pointColor = Color.FromRgb(25, 25, 25);
+            var triangleColor = Color.FromRgb(50, 50, 50);
+            var lineColor = Colors.DarkRed;
 
             //Show Bounds
             if (ShowBounds == true)
@@ -235,18 +249,10 @@ namespace Visualizer.ViewModel
                     //Fill triangles in a random color
 
                     if (ColorTriangles)
-                    {
-                        var plist = new List<Point>()
-                        {
-                            t.Point1,
-                            t.Point2,
-                            t.Point3
-                        };
-                        _drawService.DrawPolygon(plist, RandomColor(rng));
-                    }
+                        _drawService.DrawPolygon(t, Helpers.RandomColor());
 
                     if(DrawTriangles == true)
-                        _drawService.DrawTriangle(t, c);
+                        _drawService.DrawTriangle(t, triangleColor);
                 }
             }
 
@@ -255,22 +261,21 @@ namespace Visualizer.ViewModel
             if (_voronoiDiagram.VoronoiCells != null && ColorVoronoi == true)
             {
                 foreach (var cell in _voronoiDiagram.VoronoiCells)
-                    _drawService.DrawPolygon(cell.Points, Colors.GreenYellow);
+                    _drawService.DrawPolygon(cell.Points, Helpers.RandomColor());
             }
 
+            
             //Voronoi
-            if (_voronoiDiagram.Lines != null && DrawVoronoi == true)
+            if (_voronoiDiagram.HalfEdges != null && DrawVoronoi == true)
             {
-                foreach (var l in _voronoiDiagram.Lines)
+                foreach (var l in _voronoiDiagram.HalfEdges)
                 {
-                    _drawService.DrawLine(l, Colors.DarkRed);
-                    _drawService.DrawPoint(l.Point1, PointSize, Colors.DarkRed);
-                    _drawService.DrawPoint(l.Point2, PointSize, Colors.DarkRed);
+                    _drawService.DrawLine(l, lineColor);
 
                     if (ShowPointInfo == true)
                     {
-                        _drawService.DrawText(l.Point1.ToString(), Colors.DarkRed, l.Point1);
-                        _drawService.DrawText(l.Point2.ToString(), Colors.DarkRed, l.Point2);
+                        _drawService.DrawText(l.Point1.ToString(), lineColor, l.Point1);
+                        _drawService.DrawText(l.Point2.ToString(), lineColor, l.Point2);
                     }
                 }
             }
@@ -278,9 +283,15 @@ namespace Visualizer.ViewModel
             //Draw Points
             foreach (var p in _points)
             {
-                _drawService.DrawPoint(p, PointSize, Colors.Black);
+                _drawService.DrawPoint(p, PointSize, pointColor);
                 if(ShowPointInfo == true)
-                    _drawService.DrawText(p.ToString(),Colors.Black,p);
+                    _drawService.DrawText(p.ToString(), pointColor, p);
+            }
+
+            //Voronoi Cell Points
+            foreach (var voronoiCellPoint in _voronoiDiagram.VoronoiCellPoints)
+            {
+                _drawService.DrawPoint(voronoiCellPoint, PointSize, Colors.OrangeRed);
             }
 
         }
@@ -296,21 +307,24 @@ namespace Visualizer.ViewModel
             GenerateVoronoi();
 
         }
-
-        private Color RandomColor(Random rng, bool grayscale = false)
+        
+       /// <summary>
+       /// Export the currently draw canvas to a file
+       /// </summary>
+        private void Export(ICanvasExporter exporter)
         {
-            var c = new Color
-            {
-                R = (byte) (rng.Next()%255),
-                G = (byte) (rng.Next()%255),
-                B = (byte) (rng.Next()%255),
-                A = 255
-            };
+            if (exporter == null)
+                return;
 
-            if (grayscale)
-                c.R = c.G = c.B;
+           //select save location
+           var saveDlg = new SaveFileDialog()
+           {
+               FileName = "",
+           };
 
-            return c;
+           if (saveDlg.ShowDialog() == true)
+                exporter.Export(saveDlg.FileName,_drawService.Canvas);
+
         }
     }
 }

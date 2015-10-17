@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Voronoi
+namespace Voronoi.Helpers
 {
     public static class MathHelpers
     {
@@ -163,7 +163,7 @@ namespace Voronoi
         /// <summary>
         /// Determine if two triangles share atleast 2 points
         /// </summary>
-        public static bool HasSharedLineWith(Triangle t1, Triangle t2)
+        public static bool HasSharedLineWith(Triangle t1, Triangle t2, ref Line sharedLine)
         {
             var a =t1.Point1;
             var b =t1.Point2;
@@ -175,62 +175,134 @@ namespace Voronoi
 
             #region AB == Any edge
             //AB == FG
-            if (a == f && b == g) return true;
+            if (a == f && b == g)
+            {
+                sharedLine = new Line(a,b);
+                return true;
+            }
 
             //AB == GF
-            if (a == g && b == f) return true;
+            if (a == g && b == f)
+            {
+                sharedLine = new Line(a, b);
+                return true;
+            }
 
             //AB == FE
-            if (a == f && b == e) return true;
+            if (a == f && b == e)
+            {
+                sharedLine = new Line(a, b);
+                return true;
+            }
 
             //AB == EF
-            if (a ==e && b == f) return true;
+            if (a ==e && b == f)
+            {
+                sharedLine = new Line(a, b);
+                return true;
+            }
 
             //AB == GE
-            if (a == g && b == e) return true;
+            if (a == g && b == e)
+            {
+                sharedLine = new Line(a, b);
+                return true;
+            }
 
             //AB == EG
-            if (a == g && b == e) return true;
+            if (a == g && b == e)
+            {
+                sharedLine = new Line(a, b);
+                return true;
+            }
             #endregion
 
             #region AC == Any edge
             //AB == FG
-            if (a == f && c == g) return true;
+            if (a == f && c == g)
+            {
+                sharedLine = new Line(a, c);
+                return true;
+            }
 
             //AB == GF
-            if (a == g && c == f) return true;
+            if (a == g && c == f)
+            {
+                sharedLine = new Line(a, c);
+                return true;
+            }
 
             //AB == FE
-            if (a == f && c == e) return true;
+            if (a == f && c == e)
+            {
+                sharedLine = new Line(a, c);
+                return true;
+            }
 
             //AB == EF
-            if (a == e && c == f) return true;
+            if (a == e && c == f)
+            {
+                sharedLine = new Line(a, c);
+                return true;
+            }
 
             //AB == GE
-            if (a == g && c == e) return true;
+            if (a == g && c == e)
+            {
+                sharedLine = new Line(a, c);
+                return true;
+            }
 
             //AB == EG
-            if (a == g && c == e) return true;
+            if (a == g && c == e)
+            {
+                sharedLine = new Line(a, c);
+                return true;
+            }
             #endregion
 
             #region BC == Any edge
             //AB == FG
-            if (b == f && c == g) return true;
+            if (b == f && c == g)
+            {
+                sharedLine = new Line(b, c);
+                return true;
+            }
 
             //AB == GF
-            if (b == g && c == f) return true;
+            if (b == g && c == f)
+            {
+                sharedLine = new Line(b, c);
+                return true;
+            }
 
             //AB == FE
-            if (a == f && c == e) return true;
+            if (a == f && c == e)
+            {
+                sharedLine = new Line(b, c);
+                return true;
+            }
 
             //AB == EF
-            if (b == e && c == f) return true;
+            if (b == e && c == f)
+            {
+                sharedLine = new Line(b, c);
+                return true;
+            }
 
             //AB == GE
-            if (b == g && c == e) return true;
+            if (b == g && c == e)
+            {
+                sharedLine = new Line(b, c);
+                return true;
+            }
 
             //AB == EG
-            if (b == g && c == e) return true;
+            if (b == g && c == e)
+            {
+                sharedLine = new Line(b, c);
+                return true;
+            }
             #endregion
 
             return false;
@@ -340,22 +412,33 @@ namespace Voronoi
             return false;
         }
 
-        /// <summary>
-        /// Create a line from 2 random points in a given list
-        /// </summary>
-        public static Line GetRandomLine(IList<Point> points)
+        public static double DistanceBetweenPoints(Point p1, Point p2)
         {
-            //seed random generator
-            var rng = new Random(DateTime.Now.GetHashCode());
+            return Math.Sqrt((p1.X - p2.X)*(p1.X - p2.X) + (p1.Y - p2.Y)*(p1.Y - p2.Y));
+        }
 
-            //select 2 random points from the list
-            var p1Index = rng.Next(points.Count);
-            var p2Index = rng.Next(points.Count);
-            while (p1Index == p2Index)
-                p2Index = rng.Next(points.Count);
+        public static double CounterClockWise(Point p1, Point p2, Point p3)
+        {
+            return (p2.X - p1.X)*(p3.Y - p1.Y) - (p2.Y - p1.Y)*(p3.X - p1.X);
+        }
+    }
 
-            //create the line out of 2 points
-            return new Line(points[p1Index], points[p2Index]);
+    public static class Extensions
+    {
+
+        /// <summary>
+        /// Remove all double values from the list
+        /// </summary>
+        public static void FilterDoubleValues<T>(this IList<T> enumerable)
+        {
+            for (int i = 0; i < enumerable.Count; i++)
+            {
+                for (int l = 1; l < enumerable.Count - 1; l++)
+                {
+                    if (enumerable[i].Equals(enumerable[l]))
+                        enumerable.Remove(enumerable[i]);
+                }
+            }
         }
     }
 }
