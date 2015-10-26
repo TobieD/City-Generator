@@ -153,6 +153,8 @@ namespace Voronoi.Algorithms.BowyerWatson
                 cells[line.Right].AddPoint(line.Point1);
                 cells[line.Right].AddPoint(line.Point2);
             }
+
+            _voronoi.SiteCellPoints = cells;
             
             return cells.Values.ToList();
 
@@ -200,9 +202,9 @@ namespace Voronoi.Algorithms.BowyerWatson
 
 
             //filter out double points
-            _cellEdgePoints.FilterDoubleValues();
+            //_cellEdgePoints.FilterDoubleValues();
 
-            _voronoi.VoronoiCellPoints = _cellEdgePoints;
+            //_voronoi.VoronoiCellPoints = _cellEdgePoints;
             return lines;
         }
 

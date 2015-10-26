@@ -90,14 +90,14 @@ namespace Visualizer.Service
         /// <summary>
         /// Draw a line from point 1 to point 2
         /// </summary>
-        public void DrawLine(Point p1, Point p2, Color c)
+        public void DrawLine(Point p1, Point p2, Color c,int thick = 1)
         {
             var thickness = new Thickness(0, 0, 0, 0);
             var line = new Line
             {
                 Margin = thickness,
                 Visibility = Visibility.Visible,
-                StrokeThickness = 1,
+                StrokeThickness = thick,
                 Stroke = new SolidColorBrush(c),
                 X1 = p1.X,
                 Y1 = p1.Y,
@@ -108,9 +108,9 @@ namespace Visualizer.Service
             _drawCanvas.Children.Add(line);
         }
 
-        public void DrawLine(Voronoi.Line line, Color c)
+        public void DrawLine(Voronoi.Line line, Color c,int thick = 1)
         {
-            DrawLine(line.Point1,line.Point2,c);
+            DrawLine(line.Point1,line.Point2,c,thick);
         }
 
         /// <summary>

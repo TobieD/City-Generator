@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Visualizer.View"
         mc:Ignorable="d"
-        Title="Voronoi Visualization" Height="600" Width="800" DataContext="{StaticResource Locator}">
+        Title="Voronoi Visualization" Height="1050" Width="1750" DataContext="{StaticResource Locator}">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="20"/>
@@ -17,6 +17,7 @@
             <ColumnDefinition Width="185"/>
         </Grid.ColumnDefinitions>
 
+        <!-- Top Dock -->
         <DockPanel Grid.RowSpan="2">
             <Menu DockPanel.Dock="Top" BorderBrush="Black" BorderThickness="0,0,0,1" Margin="0">
                 <!-- Open new or save current -->
@@ -26,150 +27,186 @@
             </Menu>
         </DockPanel>
 
-        <!-- Visualization -->
+        <!-- Drawing -->
         <Canvas x:Name="cDrawCanvas" ClipToBounds="True" Grid.Row="1" Grid.Column="0" Grid.RowSpan="2" Background="#FFE1E1E1" />
 
-        <!-- Settings for generating -->
-        <StackPanel Orientation="Vertical" Grid.Column="1" Background="#FFC8C8C8" Grid.Row="1" Grid.RowSpan="2">
 
-            <Button Margin="5,2" Content="Reset" Command="{Binding Main.ClearCommand}" />
+        <TabControl Grid.Row="1" Grid.Column="1" Grid.RowSpan="2">
+            <TabItem Header="Voronoi">
+                <StackPanel Orientation="Vertical" Background="#FFC8C8C8">
+                    <Label Margin="5,0,0,0" Content="Generation Settings" FontWeight="Bold"/>
+                    
+                    <!--Seed-->
+                    <Grid Margin="5,0,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="23*"/>
+                            <ColumnDefinition Width="17*"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Content="Use Seed" Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="114"/>
+                        <CheckBox Grid.Column="1" IsChecked="{Binding Main.UseSeed}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
+                    
+                    <Grid Margin="5,0,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="49*"/>
+                            <ColumnDefinition Width="131*"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Content="Seed" Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="114"/>
+                        <TextBox Grid.Column="1" Margin="10,5" Text="{Binding Main.Seed}"/>
+                    </Grid>
 
-            <Label Margin="5,0,0,0" Content="Generation Settings" FontWeight="Bold"/>
+                    <!--Bounds-->
+                    <Grid Margin="5,0,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="1*"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Content="Width"/>
+                        <TextBox Grid.Column="1" Margin="5" Text="{Binding Main.Width}"/>
+                        <Label Grid.Column="2" Content="Height" />
+                        <TextBox Grid.Column="3" Margin="5" Text="{Binding Main.Height}"/>
+                    </Grid>
 
-            <!--Seed-->
-            <Grid Margin="5,0,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="23*"/>
-                    <ColumnDefinition Width="17*"/>
-                </Grid.ColumnDefinitions>
-                <Label Content="Use Seed" Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="114"/>
-                <CheckBox Grid.Column="1" IsChecked="{Binding Main.UseSeed}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-            </Grid>
-            <Grid Margin="5,0,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="49*"/>
-                    <ColumnDefinition Width="131*"/>
-                </Grid.ColumnDefinitions>
-                <Label Content="Seed" Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="114"/>
-                <TextBox Grid.Column="1" Margin="10,5" Text="{Binding Main.Seed}"/>
-            </Grid>
+                    <!--Amount-->
+                    <Grid Margin="5,0,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="2*"/>
+                            <ColumnDefinition Width="1*"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Content="Amount of Points" Grid.ColumnSpan="1"/>
+                        <TextBox x:Name="txtPointsAmount" Grid.Column="1" Margin="5" Text="{Binding Main.PointsToGenerate}"/>
+                    </Grid>
 
-            <!--Bounds-->
-            <Grid Margin="5,0,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="1*"/>
-                    <ColumnDefinition Width="1*"/>
-                    <ColumnDefinition Width="1*"/>
-                    <ColumnDefinition Width="1*"/>
-                </Grid.ColumnDefinitions>
-                <Label Content="Width"/>
-                <TextBox Grid.Column="1" Margin="5" Text="{Binding Main.Width}"/>
-                <Label Grid.Column="2" Content="Height" />
-                <TextBox Grid.Column="3" Margin="5" Text="{Binding Main.Height}"/>
-            </Grid>
+                    <Grid Margin="5,0,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="23*"/>
+                            <ColumnDefinition Width="17*"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Content="City Like" Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="114"/>
+                        <CheckBox Grid.Column="1" IsChecked="{Binding Main.CityLike}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
 
-            <!--Amount-->
-            <Grid Margin="5,0,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="2*"/>
-                    <ColumnDefinition Width="1*"/>
-                </Grid.ColumnDefinitions>
-                <Label Content="Amount of Points" Grid.ColumnSpan="1"/>
-                <TextBox x:Name="txtPointsAmount" Grid.Column="1" Margin="5" Text="{Binding Main.PointsToGenerate}"/>
-            </Grid>
-            <!--Radius-->
-            <Grid Margin="5,0,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="83*"/>
-                    <ColumnDefinition Width="97*"/>
-                </Grid.ColumnDefinitions>
-                <Label Content="Point Radius" Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="110"/>
-                <Slider Grid.Column="1" Margin="0,5" Value="{Binding Main.PointSize}" Minimum="{Binding Main.MinPointSize}" Maximum="{Binding Main.MaxPointSize}"/>
-            </Grid>
+                    <Grid Margin="5,0,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="23*"/>
+                            <ColumnDefinition Width="17*"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Content="Inner Offset" Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="114"/>
+                        <TextBox Grid.Column="1" Text="{Binding Main.Offset}" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="5,4,9,4" Width="63"/>
+                    </Grid>
 
-            <Grid Margin="5,0,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="7*"/>
-                    <ColumnDefinition Width="13*"/>
-                </Grid.ColumnDefinitions>
-                <Label Content="Algorithm" Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="110"/>
-                <ComboBox Grid.Column="1" Margin="5" SelectedItem="{Binding Main.VoronoiAlgorithm}" ItemsSource="{Binding Main.PossibleAlgorithms}"/>
-            </Grid>
+                    <Grid Margin="5,0,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="7*"/>
+                            <ColumnDefinition Width="13*"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Content="Algorithm" Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="110"/>
+                        <ComboBox Grid.Column="1" Margin="5" SelectedItem="{Binding Main.VoronoiAlgorithm}" ItemsSource="{Binding Main.PossibleAlgorithms}"/>
+                    </Grid>
+                    
+                    <Label Margin="5,0,0,0" Content="Visualize Settings" FontWeight="Bold" />
 
-            <Label Margin="5,0,0,0" Content="Visualize Settings" FontWeight="Bold" />
-            <!-- Bounds -->
-            <Grid Margin="5,0,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="109*"/>
-                    <ColumnDefinition Width="71*"/>
-                </Grid.ColumnDefinitions>
-                <Label Content="Show Bounds"/>
-                <CheckBox Grid.Column="1" Margin="25,6,30,6" IsChecked="{Binding Main.ShowBounds }" HorizontalAlignment="Center" VerticalAlignment="Center" Height="14" Width="16"/>
-            </Grid>
+                    <!--Radius-->
+                    <Grid Margin="5,0,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="83*"/>
+                            <ColumnDefinition Width="97*"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Content="Point Radius" Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="110"/>
+                        <Slider Grid.Column="1" Margin="0,5" Value="{Binding Main.PointSize}" Minimum="{Binding Main.MinPointSize}" Maximum="{Binding Main.MaxPointSize}"/>
+                    </Grid>
 
-            <!--Point Info-->
-            <Grid Margin="5,0,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="23*"/>
-                    <ColumnDefinition Width="17*"/>
-                </Grid.ColumnDefinitions>
-                <Label Content="Point Info" Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="114"/>
-                <CheckBox Grid.Column="1" IsChecked="{Binding Main.ShowPointInfo}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-            </Grid>
+                    <!-- Bounds -->
+                    <Grid Margin="5,0,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="109*"/>
+                            <ColumnDefinition Width="71*"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Content="Show Bounds"/>
+                        <CheckBox Grid.Column="1" Margin="25,6,30,6" IsChecked="{Binding Main.ShowBounds }" HorizontalAlignment="Center" VerticalAlignment="Center" Height="14" Width="16"/>
+                    </Grid>
 
-            <!--Triangulation-->
-            <Grid Margin="5,0,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="23*"/>
-                    <ColumnDefinition Width="17*"/>
-                </Grid.ColumnDefinitions>
-                <Label Content="Draw Triangulation" Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="114"/>
-                <CheckBox Grid.Column="1" IsChecked="{Binding Main.DrawTriangles}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-            </Grid>
+                    <!--Point Info-->
+                    <Grid Margin="5,0,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="23*"/>
+                            <ColumnDefinition Width="17*"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Content="Point Info" Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="114"/>
+                        <CheckBox Grid.Column="1" IsChecked="{Binding Main.ShowPointInfo}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
 
-            <!--Fill Triangulation-->
-            <Grid Margin="5,0,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="23*"/>
-                    <ColumnDefinition Width="17*"/>
-                </Grid.ColumnDefinitions>
-                <Label Content="Color Triangulation" Grid.ColumnSpan="1" HorizontalAlignment="Left" Width="97"/>
-                <CheckBox Grid.Column="1" IsChecked="{Binding Main.ColorTriangles}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-            </Grid>
+                    <!--Triangulation-->
+                    <Grid Margin="5,0,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="23*"/>
+                            <ColumnDefinition Width="17*"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Content="Draw Triangulation" Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="114"/>
+                        <CheckBox Grid.Column="1" IsChecked="{Binding Main.DrawTriangles}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
 
-            <!--Voronoi-->
-            <Grid Margin="5,0,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="23*"/>
-                    <ColumnDefinition Width="17*"/>
-                </Grid.ColumnDefinitions>
-                <Label Content="Draw Voronoi" Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="114"/>
-                <CheckBox Grid.Column="1" IsChecked="{Binding Main.DrawVoronoi}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-            </Grid>
+                    <!--Fill Triangulation-->
+                    <Grid Margin="5,0,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="23*"/>
+                            <ColumnDefinition Width="17*"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Content="Color Triangulation" Grid.ColumnSpan="1" HorizontalAlignment="Left" Width="97"/>
+                        <CheckBox Grid.Column="1" IsChecked="{Binding Main.ColorTriangles}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
 
-            <!--Fill Voronoi-->
-            <Grid Margin="5,0,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="23*"/>
-                    <ColumnDefinition Width="17*"/>
-                </Grid.ColumnDefinitions>
-                <Label Content="Color Voronoi" Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="114"/>
-                <CheckBox Grid.Column="1" IsChecked="{Binding Main.ColorVoronoi}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-            </Grid>
+                    <!--Voronoi-->
+                    <Grid Margin="5,0,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="23*"/>
+                            <ColumnDefinition Width="17*"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Content="Draw Voronoi" Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="114"/>
+                        <CheckBox Grid.Column="1" IsChecked="{Binding Main.DrawVoronoi}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
 
+                    <!--Fill Voronoi-->
+                    <Grid Margin="5,0,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="23*"/>
+                            <ColumnDefinition Width="17*"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Content="Color Voronoi" Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="114"/>
+                        <CheckBox Grid.Column="1" IsChecked="{Binding Main.ColorVoronoi}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
 
+                    <!--Generate -->
+                    <Label Margin="5,0,0,0" Content="Generate" FontWeight="Bold"/>
+                    <Button Margin="5,2" Content="Reset" Command="{Binding Main.ClearCommand}" />
+                    <Button Margin="5,2" Content="Generate Points" Command="{Binding Main.GeneratePointsCommand}" CommandParameter="{Binding Main.PointsToGenerate}"/>
+                    <!--Triangulate -->
+                    <Button Margin="5,2" Content="Create Voronoi" Command="{Binding Main.ConnectPointsCommand}" />
+                </StackPanel>
+            </TabItem>
+            <TabItem Header="City">
+                <StackPanel Orientation="Vertical" Background="#FFC8C8C8">
 
-            <!--Generate -->
-            <Button Margin="5,2" Content="Generate Points" Command="{Binding Main.GeneratePointsCommand}" 
-                    CommandParameter="{Binding Main.PointsToGenerate}"/>
+                    <Label Margin="5,0,0,0" Content="Settings" FontWeight="Bold"/>
 
-            <!--Triangulate -->
-            <Button Margin="5,2" Content="Create" Command="{Binding Main.ConnectPointsCommand}" />
+                    <Label Margin="5,0,0,0" Content="Visualize" FontWeight="Bold"/>
+                    <Label Content="Process"/>
+                    <Slider Margin="5,0" Maximum="{Binding Main.MaxRoadProgress}" Minimum="0" Value="{Binding Main.RoadProgress}" />
+                    
+                    <Label Margin="5,0,0,0" Content="Generate" FontWeight="Bold"/>
+                    <Button Margin="5,2" Content="Generate Roads" Command="{Binding Main.GenerateRoadsCommand}" />
+                </StackPanel>
 
-        </StackPanel>
-
+            </TabItem>
+        </TabControl>
+        
+        
         <!-- Generate Info -->
         <StackPanel Grid.Row="2" Grid.Column="0" Orientation="Horizontal" Background="#FFC8C8C8">
+
+            
             <Label Content="{Binding Main.GenerationTimeText}"/>
         </StackPanel>
 

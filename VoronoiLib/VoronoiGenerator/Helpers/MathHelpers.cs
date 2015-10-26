@@ -421,6 +421,70 @@ namespace Voronoi.Helpers
         {
             return (p2.X - p1.X)*(p3.Y - p1.Y) - (p2.Y - p1.Y)*(p3.X - p1.X);
         }
+
+        public static Point FindCenteroidOfCell(Cell cell)
+        {
+
+            //if(!(cell.Points.Count > 0))
+            //    return new Point(double.NaN,double.NaN);
+
+
+           //add the first point at the end
+            Point[] pts = new Point[cell.Points.Count + 1];   
+            cell.Points.CopyTo(pts,0);
+            pts[cell.Points.Count] = cell.Points[0];
+
+            //find centroid
+            double x = 0,
+                   y = 0;
+
+            for (int i = 0; i < cell.Points.Count; i++)
+            {
+                var secondFactor = pts[i].X*pts[i + 1].Y - pts[i + 1].X*pts[i].Y;
+
+                x += (pts[i].X + pts[i + 1].X)*secondFactor;
+                y += (pts[i].Y + pts[i + 1].Y) * secondFactor;
+            }
+
+            //divide by 6 times the polygon Area
+            double area = FindAreaOfCell(cell);
+            x /= (6*area);
+            y /= (6 * area);
+
+            if (x < 0)
+            {
+                x = -x;
+                y = -y;
+            }
+
+            return new Point(x,y);
+
+        }
+
+        public static double FindAreaOfCell(Cell cell)
+        {
+            //add the first point at the end
+            Point[] pts = new Point[cell.Points.Count + 1];
+            cell.Points.CopyTo(pts, 0);
+            pts[cell.Points.Count] = cell.Points[0];
+
+            // Get the areas.
+            double area = 0;
+            for (int i = 0; i < cell.Points.Count; i++)
+            {
+                area +=
+                    (pts[i + 1].X - pts[i].X) *
+                    (pts[i + 1].Y + pts[i].Y) / 2;
+            }
+
+            return area;
+        }
+
+        public static bool PointWithinBounds(Point p, Point bounds)
+        {
+            return (p.X > 0 && p.Y > 0 && p.X < bounds.X && p.Y < bounds.Y);
+        }
+
     }
 
     public static class Extensions

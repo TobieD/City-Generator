@@ -18,9 +18,6 @@ namespace Voronoi
 
     public static class VoronoiGenerator
     {
-        private static int _height;
-        private static int _width;
-
         /// <summary>
         /// Generate a given amount of points in a user defined rectangle
         /// </summary>
@@ -28,8 +25,6 @@ namespace Voronoi
         {
             //Create point list
             var points = new List<Point>();
-            _height = height;
-            _width = width;
 
             // Seed random
             var rnd = new Random(seed);
@@ -92,7 +87,7 @@ namespace Voronoi
         private static VoronoiDiagram Voronoi_Lloyd(List<Point> points)
         {
             //return the list of triangles
-            return null;
+            return new LloydGenerator().GetVoronoi(points);
         }
     }
 }

@@ -10,6 +10,7 @@ namespace Voronoi
     {
         public double X;
         public double Y;
+        public List<Line> LinesFromThisPoint;
 
         public Point(double x, double y)
         {
@@ -19,6 +20,8 @@ namespace Voronoi
 
         //Statics
         public static Point Zero => new Point(0, 0);
+        public static Point Max => new Point(double.MaxValue, double.MaxValue);
+        
 
         #region Operator Overloading
         public override string ToString()
@@ -66,6 +69,34 @@ namespace Voronoi
         {
             return !(left == right);
         }
+
+
+        public static bool operator >(Point left, Point right)
+        {
+            return (left.X > right.X );
+        }
+
+        public static bool operator <(Point left, Point right)
+        {
+            return (left.X < right.X);
+        }
+
+        public static Point operator -(Point left, Point right)
+        {
+            return new Point(left.X - right.X,left.Y - right.Y);
+        }
+
+        public static Point operator +(Point left, Point right)
+        {
+            return new Point(left.X + right.X, left.Y + right.Y);
+        }
+
+        public Point Normalize()
+        {
+            double distance = Math.Sqrt(this.X*this.X + this.Y*this.Y);
+            return new Point(this.X/distance, this.Y/distance);
+        }
+
         #endregion
     }
 
@@ -118,10 +149,26 @@ namespace Voronoi
         /// <summary>
         /// Test if two lines are eual
         /// </summary>
-        /// <remarks>Gives stack overflow error</remarks>
         public static bool operator !=(Line left, Line right)
         {
-            return left != right;
+            return !(left == right);
+        }
+
+        public static bool operator >(Line left, Line right)
+        {
+            return (left.Point1 > right.Point1 && left.Point2 > right.Point2);
+        }
+
+        public static bool operator <(Line left, Line right)
+        {
+            return (left.Point1 < right.Point1 && left.Point2 < right.Point2)
+            ;
+        }
+
+
+        public override string ToString()
+        {
+            return $"Line: {Point1} - {Point2}";
         }
 
         #endregion
@@ -241,14 +288,16 @@ namespace Voronoi
         public List<Triangle> Triangulation; //possible triangulation required
         public List<Line> HalfEdges; //voronoi diagram in line format
         public List<Cell> VoronoiCells; //voronoi diagram in Cell format 
-        public List<Point> VoronoiCellPoints; 
+        public Dictionary<Point, Cell> SiteCellPoints; //store the cell with their corresponding site
+
+        public Point Bounds;
 
         public VoronoiDiagram()
         {
             Triangulation = new List<Triangle>();
             HalfEdges = new List<Line>();
             VoronoiCells = new List<Cell>();
-            VoronoiCellPoints = new List<Point>();
+            SiteCellPoints = new Dictionary<Point,Cell>();
         }
 
         public void Clear()
@@ -256,7 +305,7 @@ namespace Voronoi
             Triangulation.Clear();
             HalfEdges.Clear();   
             VoronoiCells.Clear();
-            VoronoiCellPoints.Clear();
+            SiteCellPoints.Clear();
         }
     }
 }
