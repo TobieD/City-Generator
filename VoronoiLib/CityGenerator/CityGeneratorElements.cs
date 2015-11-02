@@ -1,13 +1,14 @@
 ﻿using System.Collections.Generic;
-using Voronoi;
+using CityGenerator.VoronoiGenerator;
 
-namespace CityGen
+namespace CityGeneratorTools.CityGenerator
 {
     public class CityData
     { 
 
         //Main Road
         public Road MainRoad;
+        public List<Road> RoadBranches; 
         
         //Zones(cell + type of buildings to spawn)
         public List<Zone> Zones;
@@ -16,11 +17,13 @@ namespace CityGen
         {
             MainRoad = new Road();
             Zones = new List<Zone>();
+            RoadBranches = new List<Road>();
         }
 
         public void Clear()
         {
             MainRoad = new Road();
+            RoadBranches.Clear();
             Zones.Clear();
         }
     }
@@ -43,11 +46,12 @@ namespace CityGen
     /// <summary>
     /// possible types of the zones in the city
     /// </summary>
-    public enum ZoneType
+    public enum ZoneType:int
     {
         Urban,
         Factory,
-        Farm
+        Farm,
+        Water
     }
 
     public class Zone

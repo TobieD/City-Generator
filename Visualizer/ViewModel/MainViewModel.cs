@@ -3,22 +3,21 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Windows.Media;
-using CityGen;
+using CityGenerator.VoronoiGenerator;
+using CityGenerator.VoronoiGenerator.Helpers;
+using CityGeneratorTools.CityGenerator;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using Microsoft.Win32;
 using Visualizer.Extensions;
 using Visualizer.Service;
-using Voronoi;
-using Voronoi.Helpers;
-using Point = Voronoi.Point;
+using Point = CityGenerator.VoronoiGenerator.Point;
 
 namespace Visualizer.ViewModel
 {
     public class MainViewModel : ViewModelBase
     {
         //Commands
-
         #region Commands
 
         private RelayCommand<int> _generatePointsCommand;
@@ -44,15 +43,19 @@ namespace Visualizer.ViewModel
         public RelayCommand ExportPngCommand
             => _exportPngCommand ?? (_exportPngCommand = new RelayCommand(() => Export(new CanvasToPngService())));
 
+       private RelayCommand _generateCityCommand;
+
+        public RelayCommand GenerateCityCommand
+            => _generateCityCommand ?? (_generateCityCommand = new RelayCommand(GenerateCity));
+
         private RelayCommand _generateRoadsCommand;
 
         public RelayCommand GenerateRoadsCommand
-            => _generateRoadsCommand ?? (_generateRoadsCommand = new RelayCommand(GenerateCity));
+            => _generateRoadsCommand ?? (_generateRoadsCommand = new RelayCommand(GenerateRoads));
 
         #endregion
 
         //Bindings
-
         #region Bindings    
 
         /// <summary>
@@ -72,7 +75,7 @@ namespace Visualizer.ViewModel
             }
         }
 
-        public bool CityLike { get; set; } = true;
+        public bool CityLike { get; set; } = false;
 
         /// <summary>
         /// Amount of points to generate
@@ -94,7 +97,7 @@ namespace Visualizer.ViewModel
         /// <summary>
         /// Size the point
         /// </summary>
-        private int _pointSize = 1;
+        private int _pointSize = 3;
 
         public int PointSize
         {
@@ -113,9 +116,13 @@ namespace Visualizer.ViewModel
         /// <summary>
         /// Settings of the bounds in which the points will be spawned
         /// </summary>
-        public int Width { get; set; } = 1400;
+        public int Width { get; set; } = 1700;
 
-        public int Height { get; set; } = 900;
+        public int Height { get; set; } = 1000;
+
+        public int StartX { get; set; } = 25;
+
+        public int StartY { get; set; } = 25;
 
         /// <summary>
         /// Draw Settings
@@ -156,13 +163,12 @@ namespace Visualizer.ViewModel
         #endregion
 
         //Fields
-
         #region Fields
 
         /// <summary>
         /// Point from where to start drawing the rectangle that visualizes the bounds
         /// </summary>
-        private readonly Point _boundsStartPoint = new Point(150, 75);
+        private readonly Point _boundsStartPoint = new Point(5, 5);
 
         /// <summary>
         /// Handles drawing to the screen
@@ -181,7 +187,6 @@ namespace Visualizer.ViewModel
         private Color _baseColor = Colors.OrangeRed;
 
         #endregion
-
 
         //Debug Bindings
         private int _maxRoadProgress = 0;
@@ -226,9 +231,10 @@ namespace Visualizer.ViewModel
             //seed for random generation
             Seed = DateTime.Now.GetHashCode();
 
-#if DEBUG
-            //Seed = 0;
-#endif
+            #if DEBUG
+            Seed = 0;
+            UseSeed = true;
+            #endif
 
         }
 
@@ -246,6 +252,9 @@ namespace Visualizer.ViewModel
             var seed = UseSeed ? Seed : DateTime.Now.GetHashCode();
             var actualAmount = amount;
             var timer = Stopwatch.StartNew();
+
+            _boundsStartPoint.X = StartX;
+            _boundsStartPoint.X = StartY;
 
             //Generate Seed
             _points = VoronoiGenerator.GenerateRandomPoints(actualAmount, _boundsStartPoint, Width, Height, Seed);
@@ -326,17 +335,38 @@ namespace Visualizer.ViewModel
             //start timer for speed check
             var timer = Stopwatch.StartNew();
 
-            _cityData = CityGenerator.GenerateCity(_voronoiDiagram);
+            _cityData = CityBuilder.GenerateCity(_voronoiDiagram);
 
             timer.Stop();
+
+            //update timer
             var time = timer.ElapsedMilliseconds/1000.0;
+            GenerationTimeText = $"City generated in {time} seconds.";
+
+            //update canvas
+            RefreshCanvas();
+
+        }
+
+        private void GenerateRoads()
+        {
+            
+            if(_cityData == null)
+                _cityData = new CityData();
+            
+            //start timer for speed check
+            var timer = Stopwatch.StartNew();
+
+
+
+            _cityData.MainRoad = CityBuilder.GenerateMainRoad(_voronoiDiagram);
+
+            timer.Stop();
+            var time = timer.ElapsedMilliseconds / 1000.0;
             GenerationTimeText = $"City generated in {time} seconds.";
 
             MaxRoadProgress = _cityData.MainRoad.RoadLines.Count;
             RoadProgress = MaxRoadProgress;
-
-            //RefreshCanvas();
-
         }
 
         /// <summary>
@@ -355,40 +385,6 @@ namespace Visualizer.ViewModel
             DrawCity();
         }
 
-        /// <summary>
-        /// Add a point on the clicked position of the canvas
-        /// </summary>
-        /// <param name="point"></param>
-        private void OnClick(Point point)
-        {
-            _points.Add(point);
-            //retriangulate with the new point added
-            GenerateVoronoi();
-
-        }
-
-        /// <summary>
-        /// Export the currently draw canvas to a file
-        /// </summary>
-        private void Export(ICanvasExporter exporter)
-        {
-            if (exporter == null)
-                return;
-
-            //select save location
-            var saveDlg = new SaveFileDialog()
-            {
-                FileName = "",
-                Filter = "png Image|*.png",
-                Title = "Save the diagram to an Image File"
-            };
-
-            if (saveDlg.ShowDialog() == true)
-                exporter.Export(saveDlg.FileName, _drawService.Canvas);
-
-        }
-
-
         private void DrawVoronoiDiagram()
         {
             var pointColor = Color.FromRgb(25, 25, 25);
@@ -398,8 +394,6 @@ namespace Visualizer.ViewModel
 
             if (_voronoiDiagram != null)
             {
-
-
                 //Draw Triangulation
                 if (_voronoiDiagram.Triangulation != null)
                 {
@@ -429,7 +423,12 @@ namespace Visualizer.ViewModel
                 {
                     foreach (var l in _voronoiDiagram.HalfEdges)
                     {
-                        _drawService.DrawLine(l, lineColor);
+                        if (DrawVoronoi == true)
+                        {
+
+                            var c = DrawTriangles == true ? Colors.Red : lineColor;
+                            _drawService.DrawLine(l, c);
+                        }
 
                         if (ShowPointInfo == true)
                         {
@@ -455,20 +454,89 @@ namespace Visualizer.ViewModel
                 return;
 
 
-            if (_cityData.MainRoad.RoadLines.Count > 0)
+            if (_cityData.Zones.Count > 0)
             {
-                for (int i = 0; i < RoadProgress - 1; i++)
+
+                Color[] colors = new[]
                 {
-                    var c = Colors.ForestGreen;
-                    var road = _cityData.MainRoad.RoadLines[i];
-                    _drawService.DrawLine(road, c, 5);
+                    Colors.SaddleBrown,
+                    Colors.Gray,
+                    Colors.DarkGreen,
+                    Colors.DodgerBlue
+                };
+
+                foreach (var zone in _cityData.Zones)
+                {
+
+                    Color c = colors[(int)zone.Type];
+                    c = c.GetRandomColorOffset(0.04f);
+                    _drawService.DrawCell(zone.ZoneBounds, c, true);
                 }
             }
 
+            if (_cityData.MainRoad.RoadLines.Count > 0)
+            {
+                foreach (var roadLine in _cityData.MainRoad.RoadLines)
+                {
+                    var c = Colors.ForestGreen;
+                    _drawService.DrawLine(roadLine, c, 5);
+                }
+
+            }
             //Draw start and endpoint of main road
             _drawService.DrawPoint(_cityData.MainRoad.StartPoint, 10, Colors.OrangeRed);
             _drawService.DrawPoint(_cityData.MainRoad.EndPoint, 10, Colors.DodgerBlue);
 
+
+
+            if (_cityData.RoadBranches.Count > 0)
+            {
+
+                foreach (var roadBranch in _cityData.RoadBranches)
+                {
+                    var c = Colors.DarkRed;
+                    foreach (var roadLine in roadBranch.RoadLines)
+                    {
+                        _drawService.DrawLine(roadLine, c, 3);
+
+                    }
+
+                    _drawService.DrawPoint(roadBranch.StartPoint, 5, Colors.YellowGreen);
+                    _drawService.DrawPoint(roadBranch.EndPoint, 5, Colors.DeepPink);
+
+                }
+            }
+        }
+
+        /// <summary>
+        /// Add a point on the clicked position of the canvas
+        /// </summary>
+        private void OnClick(Point point)
+        {
+            _points.Add(point);
+            //retriangulate with the new point added
+            GenerateVoronoi();
+
+        }
+
+        /// <summary>
+        /// Export the currently draw canvas to a file
+        /// </summary>
+        private void Export(ICanvasExporter exporter)
+        {
+            if (exporter == null)
+                return;
+
+            //select save location
+            var saveDlg = new SaveFileDialog()
+            {
+                FileName = "",
+                Filter = "png Image|*.png",
+                Title = "Save the diagram to an Image File"
+            };
+
+            if (saveDlg.ShowDialog() == true)
+                exporter.Export(saveDlg.FileName, _drawService.Canvas,Width,Height);
 
         }
     }

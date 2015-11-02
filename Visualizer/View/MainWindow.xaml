@@ -28,12 +28,12 @@
         </DockPanel>
 
         <!-- Drawing -->
-        <Canvas x:Name="cDrawCanvas" ClipToBounds="True" Grid.Row="1" Grid.Column="0" Grid.RowSpan="2" Background="#FFE1E1E1" />
+        <Canvas x:Name="cDrawCanvas" ClipToBounds="True" Grid.Row="1" Grid.Column="0" Grid.RowSpan="2" Background="#FFFFFF" />
 
 
         <TabControl Grid.Row="1" Grid.Column="1" Grid.RowSpan="2">
             <TabItem Header="Voronoi">
-                <StackPanel Orientation="Vertical" Background="#FFC8C8C8">
+                <StackPanel Orientation="Vertical" Background="#FFFFFF">
                     <Label Margin="5,0,0,0" Content="Generation Settings" FontWeight="Bold"/>
                     
                     <!--Seed-->
@@ -63,9 +63,22 @@
                             <ColumnDefinition Width="1*"/>
                             <ColumnDefinition Width="1*"/>
                         </Grid.ColumnDefinitions>
+                        <Label Content="Start X"/>
+                        <TextBox Grid.Column="1" Margin="5" Text="{Binding Main.StartX}"/>
+                        <Label Grid.Column="2" Content="Start Y" />
+                        <TextBox Grid.Column="3" Margin="5" Text="{Binding Main.StartY}"/>
+                    </Grid>
+                    
+                    <Grid Margin="5,0,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="1*"/>
+                        </Grid.ColumnDefinitions>
                         <Label Content="Width"/>
                         <TextBox Grid.Column="1" Margin="5" Text="{Binding Main.Width}"/>
-                        <Label Grid.Column="2" Content="Height" />
+                        <Label Grid.Column="2" Content="Length" />
                         <TextBox Grid.Column="3" Margin="5" Text="{Binding Main.Height}"/>
                     </Grid>
 
@@ -196,7 +209,9 @@
                     <Slider Margin="5,0" Maximum="{Binding Main.MaxRoadProgress}" Minimum="0" Value="{Binding Main.RoadProgress}" />
                     
                     <Label Margin="5,0,0,0" Content="Generate" FontWeight="Bold"/>
-                    <Button Margin="5,2" Content="Generate Roads" Command="{Binding Main.GenerateRoadsCommand}" />
+                    <Button Margin="5,2" Content="Build Roads" Command="{Binding Main.GenerateRoadsCommand}" />
+                    <Button Margin="5,2" Content="Generate Districts" Command="{Binding Main.GenerateCityCommand}" />
+                    
                 </StackPanel>
 
             </TabItem>

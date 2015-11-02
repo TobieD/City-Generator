@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Voronoi.Helpers
+namespace CityGenerator.VoronoiGenerator.Helpers
 {
     public static class MathHelpers
     {

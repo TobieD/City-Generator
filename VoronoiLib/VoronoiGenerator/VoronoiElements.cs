@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Voronoi
+namespace CityGenerator.VoronoiGenerator
 {
     /// <summary>
     /// Represents a 2D point
@@ -250,6 +250,10 @@ namespace Voronoi
 
         public void AddPoint(Point p)
         { 
+
+            if(Points.Contains(p))
+                return;
+
             Points.Add(p);
 
             SortAlgorithms.ReferencePoint = CellPoint;

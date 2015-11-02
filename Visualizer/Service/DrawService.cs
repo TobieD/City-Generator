@@ -3,9 +3,9 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
-using Voronoi;
+using CityGenerator.VoronoiGenerator;
 using Line = System.Windows.Shapes.Line;
-using Point = Voronoi.Point;
+using Point = CityGenerator.VoronoiGenerator.Point;
 
 
 namespace Visualizer.Service
@@ -108,7 +108,7 @@ namespace Visualizer.Service
             _drawCanvas.Children.Add(line);
         }
 
-        public void DrawLine(Voronoi.Line line, Color c,int thick = 1)
+        public void DrawLine(CityGenerator.VoronoiGenerator.Line line, Color c,int thick = 1)
         {
             DrawLine(line.Point1,line.Point2,c,thick);
         }
@@ -199,7 +199,7 @@ namespace Visualizer.Service
             DrawPolygon(plist,c);
         }
 
-        public void DrawCell(Cell cell, Color c, bool bFill = true)
+        public void DrawCell(Cell cell, Color c, bool bFill = true,bool bBorder = false)
         {
             //Create polygon
             var polygon = new Polygon()
@@ -209,6 +209,8 @@ namespace Visualizer.Service
                 FillRule = FillRule.EvenOdd,
                 StrokeThickness = 1
             };
+
+            polygon.Stroke = (bBorder)? new SolidColorBrush(Colors.Red) : new SolidColorBrush(c);
             
             //Create a point list for the polygon
             var pc = new PointCollection();

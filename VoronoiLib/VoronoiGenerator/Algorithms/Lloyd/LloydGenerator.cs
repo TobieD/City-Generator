@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Voronoi.Helpers;
+﻿using System.Collections.Generic;
+using CityGenerator.VoronoiGenerator.Algorithms.Fortune;
+using CityGenerator.VoronoiGenerator.Helpers;
 
-namespace Voronoi.Algorithms.Fortune
+namespace CityGenerator.VoronoiGenerator.Algorithms.Lloyd
 {
     /// <summary>
     /// Generate a voronoi diagram with the lloyd algorithm
@@ -14,7 +13,7 @@ namespace Voronoi.Algorithms.Fortune
 
         private VoronoiDiagram _voronoi;
 
-        public VoronoiDiagram GetVoronoi(List<Voronoi.Point> points)
+        public VoronoiDiagram GetVoronoi(List<Point> points)
         {
             _voronoi = new VoronoiDiagram();
             

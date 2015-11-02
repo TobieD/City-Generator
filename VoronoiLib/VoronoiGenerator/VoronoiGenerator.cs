@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using Voronoi.Algorithms.BowyerWatson;
-using Voronoi.Algorithms.Fortune;
-using FortuneGenerator = Voronoi.Algorithms.Fortune.FortuneGenerator;
+using CityGenerator.VoronoiGenerator.Algorithms.BowyerWatson;
+using CityGenerator.VoronoiGenerator.Algorithms.Lloyd;
+using FortuneGenerator = CityGenerator.VoronoiGenerator.Algorithms.Fortune.FortuneGenerator;
 
-namespace Voronoi
+namespace CityGenerator.VoronoiGenerator
 {
     /// <summary>
     /// Different algorithms that can be used for generating a Voronoi Diagram

@@ -4,6 +4,6 @@ namespace Visualizer.Service
 {
     public interface ICanvasExporter
     {
-        void Export(string filename, Canvas canvas);
+        void Export(string filename, Canvas canvas,int width, int height);
     }
 }

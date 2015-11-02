@@ -5,7 +5,7 @@ VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Visualizer", "Visualizer\Visualizer.csproj", "{718E11F3-34CE-4AE2-8FFD-FCDB194A1C98}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TownGeneratorLib", "VoronoiLib\TownGeneratorLib.csproj", "{DC3760EE-9410-48A7-A7D6-30D107D9F828}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CityGeneratorLibrary", "VoronoiLib\CityGeneratorLibrary.csproj", "{DC3760EE-9410-48A7-A7D6-30D107D9F828}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

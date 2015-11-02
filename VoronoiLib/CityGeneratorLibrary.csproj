@@ -7,8 +7,8 @@
     <ProjectGuid>{DC3760EE-9410-48A7-A7D6-30D107D9F828}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>TownGeneratorLib</RootNamespace>
-    <AssemblyName>TownGeneratorLib</AssemblyName>
+    <RootNamespace>CityGeneratorTools</RootNamespace>
+    <AssemblyName>CityGeneratorTools</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
@@ -21,7 +21,6 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -30,16 +29,16 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-  </ItemGroup>
   <ItemGroup>
     <Compile Include="Extensions\Extensions.cs" />
     <Compile Include="VoronoiGenerator\Algorithms\BowyerWatson\BowyerWatsonGenerator.cs" />
     <Compile Include="VoronoiGenerator\Algorithms\Fortune\FortuneGenerator.cs" />
+    <Compile Include="VoronoiGenerator\Algorithms\Fortune\Helpers\FortuneVoronoi.cs" />
+    <Compile Include="VoronoiGenerator\Algorithms\Fortune\Helpers\HashSet.cs" />
+    <Compile Include="VoronoiGenerator\Algorithms\Fortune\Helpers\PriorityQueue.cs" />
+    <Compile Include="VoronoiGenerator\Algorithms\Fortune\Helpers\ToolBox.cs" />
+    <Compile Include="VoronoiGenerator\Algorithms\Fortune\Helpers\Vector.cs" />
     <Compile Include="VoronoiGenerator\Algorithms\Lloyd\LloydGenerator.cs" />
     <Compile Include="VoronoiGenerator\Helpers\MathHelpers.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

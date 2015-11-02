@@ -15,11 +15,11 @@ namespace Visualizer.Service
         /// export canvas to .png
         /// http://stackoverflow.com/questions/21411878/saving-a-canvas-to-png-c-sharp-wpf
         /// </summary>
-        public void Export(string filename,Canvas canvas)
+        public void Export(string filename,Canvas canvas,int width, int height)
         {
             var dpi = 96;
-            var width = (int) canvas.RenderSize.Width;
-            var height = (int)canvas.RenderSize.Height;
+            width = (int) canvas.RenderSize.Width;
+            height = (int)canvas.RenderSize.Height;
             Console.WriteLine("Exporting image of {0}x{1}",width, height);
 
             var rtb = new RenderTargetBitmap(width, height, dpi,dpi,PixelFormats.Default);

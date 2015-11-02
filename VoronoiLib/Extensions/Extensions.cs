@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Extensions
+namespace CityGenerator.Extensions
 {
     public static class Extensions
     {

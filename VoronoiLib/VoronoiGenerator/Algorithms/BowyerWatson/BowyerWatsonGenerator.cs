@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Voronoi.Helpers;
+using CityGenerator.VoronoiGenerator.Helpers;
 
-namespace Voronoi.Algorithms.BowyerWatson
+namespace CityGenerator.VoronoiGenerator.Algorithms.BowyerWatson
 {    
     /// <summary>
     /// Helper class for generating a Voronoi Diagram using the Bowyer Watson algorithm
