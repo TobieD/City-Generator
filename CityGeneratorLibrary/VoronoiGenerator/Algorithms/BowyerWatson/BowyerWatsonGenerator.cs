@@ -140,7 +140,7 @@ namespace Voronoi.Algorithms
                     continue;
 
                 var c = new Cell();
-                c.CellPoint = point;
+                c.SitePoint = point;
                 cells.Add(point,c);
             }
 

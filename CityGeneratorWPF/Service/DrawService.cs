@@ -3,9 +3,12 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using CityGenerator;
+using CityGeneratorWPF.Extensions;
 using Voronoi;
 using Line = System.Windows.Shapes.Line;
 using Point = Voronoi.Point;
+using Rectangle = Voronoi.Rectangle;
 
 namespace CityGeneratorWPF.Service
 {
@@ -168,6 +171,20 @@ namespace CityGeneratorWPF.Service
             _drawCanvas.Children.Add(point);
         }
 
+        public void DrawRectangle(Rectangle rect, Color c)
+        {
+            var p1 = new Point(rect.Left, rect.Top);
+            var p2 = new Point(rect.Left, rect.Bottom);
+            var p3 = new Point(rect.Right, rect.Bottom);
+            var p4 = new Point(rect.Right, rect.Top);
+
+
+            DrawLine(p1, p2, c);
+            DrawLine(p2, p3, c);
+            DrawLine(p3, p4, c);
+            DrawLine(p4, p1, c);
+        }
+
         public void DrawPolygon(IList<Point> points, Color c)
         {
             var polygon = new Polygon()
@@ -235,6 +252,33 @@ namespace CityGeneratorWPF.Service
             Canvas.SetTop(textBlock, position.Y);
 
             _drawCanvas.Children.Add(textBlock);
+        }
+
+        public void DrawDistrict(District district, Color c)
+        {
+            foreach (var cell in district.Cells)
+            {
+
+                DrawCell(cell, c.GetRandomColorOffset(0.07));
+                DrawCell(cell, c.GetRandomColorOffset(0.07));
+            };
+        }
+
+        public void DrawRoad(Road road, Color linecolor, Color startColor, Color endColor, bool drawStartEnd = true)
+        {
+            foreach (var line in road.Lines)
+            {
+                DrawLine(line,linecolor,4);
+            }
+
+            if(!drawStartEnd)
+                return;
+
+            var radius = 8;
+            //start and endpoint
+            DrawPoint(road.Start,radius,startColor);
+            DrawPoint(road.End, radius, endColor);
+
         }
     }
 }

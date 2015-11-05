@@ -33,7 +33,7 @@ namespace Voronoi.Algorithms
                 dataPoints[i] = new Vector(point.X,point.Y);
 
 
-                var cell = new Cell {CellPoint = point};
+                var cell = new Cell {SitePoint = point};
                 _siteCells.Add(point, cell);
             }
 

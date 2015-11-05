@@ -10,7 +10,6 @@ namespace Voronoi
     {
         public double X;
         public double Y;
-        public List<Line> LinesFromThisPoint;
 
         public Point(double x, double y)
         {
@@ -99,6 +98,9 @@ namespace Voronoi
 
         #endregion
     }
+
+    
+    
 
     /// <summary>
     /// Consists of 2 points
@@ -207,6 +209,24 @@ namespace Voronoi
         } 
     }
 
+    public class Rectangle
+    {
+        public double Left;
+        public double Right;
+
+        public double Top;
+        public double Bottom;
+
+        public Rectangle(double left, double top, double width, double height)
+        {
+            Left = left;
+            Right = left + width;
+
+            Top = top;
+            Bottom = top + height;
+        }
+    }
+
     public class Circle
     {
         public Point Center;
@@ -231,7 +251,7 @@ namespace Voronoi
         /// <summary>
         ///the point that the cell is build around
         /// /// </summary>
-        public Point CellPoint;
+        public Point SitePoint;
 
         public Cell()
         {
@@ -256,7 +276,7 @@ namespace Voronoi
 
             Points.Add(p);
 
-            SortAlgorithms.ReferencePoint = CellPoint;
+            SortAlgorithms.ReferencePoint = SitePoint;
             Points.Sort(new Comparison<Point>(SortAlgorithms.SortClockwise));
         }
 
@@ -294,7 +314,7 @@ namespace Voronoi
         public List<Cell> VoronoiCells; //voronoi diagram in Cell format 
         public Dictionary<Point, Cell> SiteCellPoints; //store the cell with their corresponding site
 
-        public Point Bounds;
+        public Rectangle Bounds;
 
         public VoronoiDiagram()
         {

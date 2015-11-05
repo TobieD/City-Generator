@@ -38,13 +38,22 @@ public static class TownBuilder
 
         var indices = new int[] {0,1,2,0,2,3};
 
+        var uvs = new[]
+        {
+            new Vector2(0, 0),
+            new Vector2(1, 0),
+            new Vector2(1, 1),
+            new Vector2(0, 1)
+        };
+
         //Create Mesh
         Mesh mesh = new Mesh
         {
             name = "Plane",
             vertices = verticesTemp,
             normals = normalsTemp,
-            triangles = indices
+            triangles = indices,
+            uv = uvs
         };
 
         mesh.Optimize();

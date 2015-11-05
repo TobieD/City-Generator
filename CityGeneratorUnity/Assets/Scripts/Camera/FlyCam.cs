@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEditor;
 
 public class FlyCam : MonoBehaviour
 {
@@ -18,6 +19,12 @@ public class FlyCam : MonoBehaviour
     private void Update()
 	{
 
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            Application.Quit();
+            UnityEditor.EditorApplication.isPlaying = false;
+        }
+
         //mouse input + camera rotation
         _lastMousePos = Input.mousePosition - _lastMousePos;
         _lastMousePos = new Vector3(-_lastMousePos.y * MouseSensitivity, _lastMousePos.x * MouseSensitivity, 0);
@@ -30,7 +37,6 @@ public class FlyCam : MonoBehaviour
         }
 
         _lastMousePos = Input.mousePosition;
-
 
 
         //keyboard input

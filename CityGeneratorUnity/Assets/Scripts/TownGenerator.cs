@@ -13,14 +13,13 @@ public class TownGenerationSettings
     public bool UseSeed = false;
     public int Seed = 0;
 
-    public GameObject Parent = null;
+    
 
     public int Width = 2500;
     public int Height = 2500;
     public int Amount = 500;
     public VoronoiAlgorithm Algorithm = VoronoiAlgorithm.BoywerWatson;
 
-    public Dictionary<string, List<GameObject>> PrefabsPerZone;
 }
 
 /// <summary>
@@ -29,13 +28,15 @@ public class TownGenerationSettings
 public class TownGenerator:Singleton<TownGenerator>
 {
     //Properties
-    public VoronoiDiagram VoronoiDiagram { get; private set; }
-
     private TownGenerationSettings _settings;
     private bool _bCanBuild = false;
 
+    //Library generated data
     private CityData _cityData;
+    public VoronoiDiagram VoronoiDiagram { get; private set; }
 
+    //Unity specific data for generation
+    public GameObject Parent = null;
     public Dictionary<string, List<GameObject>> PrefabsPerZone;
 
     public TownGenerator()
@@ -53,10 +54,10 @@ public class TownGenerator:Singleton<TownGenerator>
         _settings = settings;
 
         //create a parent object at 0,0,0 if none is set
-        if (_settings.Parent == null)
+        if (Parent == null)
         {
-            _settings.Parent = new GameObject("Town");
-            _settings.Parent.transform.position = Vector3.zero;
+            Parent = new GameObject("Town");
+            Parent.transform.position = Vector3.zero;
         }
 
         //generate points + Voronoi
@@ -106,28 +107,39 @@ public class TownGenerator:Singleton<TownGenerator>
         int amount = _settings.Amount;
         int width = _settings.Width;
         int height = _settings.Height;
-        GameObject parent = _settings.Parent;
         VoronoiAlgorithm algorithm = _settings.Algorithm;
         int seed = _settings.Seed;
         
         //Make sure the parent is always in the center of the generation plane
         Point startPoint = Point.Zero;
-        startPoint.X = parent.transform.position.x - width / 2.0;
-        startPoint.Y = parent.transform.position.z - height / 2.0;
+        startPoint.X = Parent.transform.position.x - width / 2.0;
+        startPoint.Y = Parent.transform.position.z - height / 2.0;
 
         //Generate Points and diagram
         var points = VoronoiGenerator.GenerateRandomPoints(amount, startPoint, width, height, seed);
         VoronoiDiagram = VoronoiGenerator.CreateVoronoi(points, algorithm);
         VoronoiDiagram.Sites = points;
         VoronoiDiagram.Bounds = new Point(width,height);
-        
+
+
+        //Add plane underneath the generated city
+        var ren = Parent.AddComponent<MeshRenderer>();
+        var mat = Resources.Load<Material>("Material/default");
+        ren.material = mat;
+        mat.mainTextureScale = new Vector2(width/100, height/100);
+
+        var filt = Parent.AddComponent<MeshFilter>();
+        filt.mesh = TownBuilder.CreateGroundPlane(width, height, 0);
+
+
+
     }
 
     private void CreateZoneGameObjects()
     {
         //locate the zone parent object
         var zoneParent = FindOrCreate("Zones");
-        zoneParent.transform.parent = _settings.Parent.transform;
+        zoneParent.transform.parent = Parent.transform;
 
         //Create game objects for each point and add the TownZone script
         //TownZone handles generating meshes for each zone based on its zone type.
@@ -144,8 +156,7 @@ public class TownGenerator:Singleton<TownGenerator>
     private void CreateZoneGameObjectFromCell(Cell cell, string name, GameObject parent)
     {
         //Create simple game object(sphere will be removed eventually)
-        var newGameObj = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-        newGameObj.name = name;
+        var newGameObj = new GameObject(name);
         newGameObj.transform.parent = parent.transform;
         newGameObj.transform.position = cell.CellPoint.ToVector3();
 
@@ -161,7 +172,7 @@ public class TownGenerator:Singleton<TownGenerator>
     private void CreateRoadGameObjects()
     {
         var roadParent = FindOrCreate("Roads");
-        roadParent.transform.parent = _settings.Parent.transform;
+        roadParent.transform.parent = Parent.transform;
 
         //Debug only
         for(int i = 0; i < _cityData.MainRoad.RoadLines.Count; i++)

@@ -93,7 +93,7 @@ public class TownGeneratorWindow : EditorWindow
         _settings.Height = EditorGUILayout.IntField("Height",_settings.Height);
 
         //parent object to spawn the town on
-        _settings.Parent = (GameObject)EditorGUILayout.ObjectField("Parent", _settings.Parent, typeof (GameObject), true);
+        _townGenerator.Parent = (GameObject)EditorGUILayout.ObjectField("Parent", _townGenerator.Parent, typeof (GameObject), true);
 
         //Algorithm used
         _settings.Algorithm = (VoronoiAlgorithm)EditorGUILayout.EnumPopup("Algorithm", _settings.Algorithm);

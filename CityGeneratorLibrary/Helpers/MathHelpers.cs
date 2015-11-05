@@ -482,15 +482,47 @@ namespace Helpers
             return area;
         }
 
-        public static bool PointWithinBounds(Point p, Point bounds)
+        public static bool PointWithinBounds(Point p, Rectangle bounds)
         {
-            return (p.X > 0 && p.Y > 0 && p.X < bounds.X && p.Y < bounds.Y);
+            return (p.X > bounds.Left && p.Y > bounds.Top && p.X < bounds.Right && p.Y < bounds.Bottom);
         }
 
-    }
+        public static List<Point> FindPointsNearPoint(this List<Point> points, Point startPoint, double radius = 35.0)
+        {
+            var pointsInRadius = new List<Point>();
 
-    public static class Extensions
-    {
+            foreach (var point in points)
+            {
+                var distance = MathHelpers.DistanceBetweenPoints(startPoint, point);
+                if (distance < radius)
+                    pointsInRadius.Add(point);
+            }
+
+
+            return pointsInRadius;
+        }
+
+        public static Point FindClosestPoint(this List<Point> points, Point start)
+        {
+            Point closest = null;
+
+            var minDistance = double.MaxValue;
+
+            foreach (var point in points)
+            {
+                var distance = MathHelpers.DistanceBetweenPoints(start, point);
+                if (distance < minDistance && point != start)
+                {
+                    closest = point;
+                    minDistance = distance;
+                }
+
+            }
+
+
+            return closest;
+
+        }
 
         /// <summary>
         /// Remove all double values from the list
@@ -522,5 +554,21 @@ namespace Helpers
             if (_rng == null)
                 _rng = new Random(DateTime.Now.GetHashCode());
         }
+
+
+        public static List<Point> ToPoints(this List<Line> lines)
+        {
+            var points = new List<Point>();
+
+            foreach (var line in lines)
+            {
+                points.Add(line.Point1);
+                points.Add(line.Point2);
+            }
+
+
+            return points;
+        } 
+
     }
 }

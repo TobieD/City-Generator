@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Windows.Media;
@@ -8,8 +9,8 @@ using CityGeneratorWPF.Extensions;
 using CityGeneratorWPF.Service;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
-using Helpers;
 using Microsoft.Win32;
+using Points;
 using Voronoi;
 
 namespace CityGeneratorWPF.ViewModel
@@ -47,10 +48,15 @@ namespace CityGeneratorWPF.ViewModel
         public RelayCommand GenerateCityCommand
             => _generateCityCommand ?? (_generateCityCommand = new RelayCommand(GenerateCity));
 
-        private RelayCommand _generateRoadsCommand;
+        private RelayCommand<string> _AddSettingsCommand;
 
-        public RelayCommand GenerateRoadsCommand
-            => _generateRoadsCommand ?? (_generateRoadsCommand = new RelayCommand(GenerateRoads));
+        public RelayCommand<string> AddSettingsCommand
+            => _AddSettingsCommand ?? (_AddSettingsCommand = new RelayCommand<string>(AddNewCityDistrictType));
+
+        private RelayCommand<string> _removeSettingsCommand;
+
+        public RelayCommand<string> RemoveSettingsCommand
+            => _removeSettingsCommand ?? (_removeSettingsCommand = new RelayCommand<string>(RemoveCityDistrictType));
 
         #endregion
 
@@ -79,7 +85,7 @@ namespace CityGeneratorWPF.ViewModel
         /// <summary>
         /// Amount of points to generate
         /// </summary>
-        private int _pointsToGenerate = 500;
+        private int _pointsToGenerate = 2500;
 
         public int PointsToGenerate
         {
@@ -96,7 +102,7 @@ namespace CityGeneratorWPF.ViewModel
         /// <summary>
         /// Size the point
         /// </summary>
-        private int _pointSize = 3;
+        private int _pointSize = 2;
 
         public int PointSize
         {
@@ -115,13 +121,13 @@ namespace CityGeneratorWPF.ViewModel
         /// <summary>
         /// Settings of the bounds in which the points will be spawned
         /// </summary>
-        public int Width { get; set; } = 1700;
+        public int Width { get; set; } = 1600;
 
-        public int Height { get; set; } = 1000;
+        public int Height { get; set; } = 900;
 
-        public int StartX { get; set; } = 25;
+        public int StartX { get; set; } = 50;
 
-        public int StartY { get; set; } = 25;
+        public int StartY { get; set; } = 50;
 
         /// <summary>
         /// Draw Settings
@@ -135,6 +141,10 @@ namespace CityGeneratorWPF.ViewModel
         public bool? DrawVoronoi { get; set; } = true;
         public bool? ColorVoronoi { get; set; } = false;
         public bool? ShowPointInfo { get; set; } = false;
+        public bool? DrawPoints { get; set; } = true;
+
+        public bool? DrawDistricts { get; set; } = false;
+        public bool? DrawRoads { get; set; } = true;
 
         /// <summary>
         /// algorithm used to generate Delaunay Triangulation
@@ -143,6 +153,12 @@ namespace CityGeneratorWPF.ViewModel
 
         public IEnumerable<VoronoiAlgorithm> PossibleAlgorithms
             => Enum.GetValues(typeof (VoronoiAlgorithm)).Cast<VoronoiAlgorithm>();
+
+
+        public PointGenerationAlgorithm PointAlgorithm { get; set; } = PointGenerationAlgorithm.CityLike;
+
+        public IEnumerable<PointGenerationAlgorithm> PossiblePointAlgorithms
+            => Enum.GetValues(typeof(PointGenerationAlgorithm)).Cast<PointGenerationAlgorithm>();
 
         /// <summary>
         /// Generation Info
@@ -156,6 +172,32 @@ namespace CityGeneratorWPF.ViewModel
             {
                 _generationText = value;
                 RaisePropertyChanged();
+            }
+        }
+
+        //Debug Bindings
+        private int _maxRoadProgress = 0;
+
+        public int MaxRoadProgress
+        {
+            get { return _maxRoadProgress; }
+            set
+            {
+                _maxRoadProgress = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        private int _roadProgress = 0;
+
+        public int RoadProgress
+        {
+            get { return _roadProgress; }
+            set
+            {
+                _roadProgress = value;
+                RaisePropertyChanged();
+                RefreshCanvas();
             }
         }
 
@@ -187,29 +229,40 @@ namespace CityGeneratorWPF.ViewModel
 
         #endregion
 
-        //Debug Bindings
-        private int _maxRoadProgress = 0;
 
-        public int MaxRoadProgress
+        //district settings
+        private List<Color> _districtColors = new List<Color>()
         {
-            get { return _maxRoadProgress; }
+            Colors.ForestGreen,
+            Colors.SaddleBrown,
+            Color.FromRgb(235,175,40),
+            Colors.DarkSlateGray,
+            Colors.BurlyWood,
+            Colors.DeepSkyBlue
+        };
+        private List<string> _districtTypes = new List<string>()
+        {
+            "Grass", //simple empty space
+            "Urban", //tight appartments + shops
+            "Financial", //big buildings
+            "Factory", //industrial buildings
+            "Suburbs", //big houses and lotsof green
+            "Water"
+
+        };
+
+        public string NewType { get; set; } = "newType";
+
+        private ObservableCollection<DistrictSettings> _DistrictSettings = new ObservableCollection<DistrictSettings>();
+        private GenerationSettings _voronoiSettings;
+
+        public ObservableCollection<DistrictSettings> DistrictSettings
+        {
+            get { return _DistrictSettings; }
             set
             {
-                _maxRoadProgress = value;
+                _DistrictSettings = value;
                 RaisePropertyChanged();
-            }
-        }
-
-        private int _roadProgress = 0;
-
-        public int RoadProgress
-        {
-            get { return _roadProgress; }
-            set
-            {
-                _roadProgress = value;
-                RaisePropertyChanged();
-                RefreshCanvas();
             }
         }
 
@@ -230,10 +283,13 @@ namespace CityGeneratorWPF.ViewModel
             //seed for random generation
             Seed = DateTime.Now.GetHashCode();
 
-            #if DEBUG
-            Seed = 0;
-            UseSeed = true;
-            #endif
+
+            foreach (var districtType in _districtTypes)
+            {
+                DistrictSettings.Add(new DistrictSettings(districtType));
+            }
+
+            RaisePropertyChanged("DistrictSettings");
 
         }
 
@@ -247,48 +303,34 @@ namespace CityGeneratorWPF.ViewModel
             _voronoiDiagram.Clear();
             _cityData.Clear();
 
-            //user seed or random
-            var seed = UseSeed ? Seed : DateTime.Now.GetHashCode();
-            var actualAmount = amount;
-            var timer = Stopwatch.StartNew();
-
-            _boundsStartPoint.X = StartX;
-            _boundsStartPoint.X = StartY;
-
-            //Generate Seed
-            _points = VoronoiGenerator.GenerateRandomPoints(actualAmount, _boundsStartPoint, Width, Height, Seed);
-
-            //generate additional points on the center
-            if (CityLike)
+            //fill settings
+            _voronoiSettings = new GenerationSettings
             {
-                int offset = Offset;
+                VoronoiAlgorithm = VoronoiAlgorithm,
+                PointAlgorithm = PointAlgorithm,
+                Width = Width,
+                Length = Height,
+                StartX = StartX,
+                StartY = StartY,
+                UseSeed = UseSeed,
+                Seed = Seed,
+                Amount = PointsToGenerate
+            };
 
-                var startPoint = new Point(_boundsStartPoint.X + (int) (Width/(offset*2)),
-                    _boundsStartPoint.Y + (int) (Height/(offset*2)));
-                var newWidth = Width - (Width/offset);
-                var newHeight = Height - (Height/offset);
-
-                _points.AddRange(VoronoiGenerator.GenerateRandomPoints(actualAmount, startPoint, newWidth, newHeight,
-                    Seed));
-            }
-
-            //Add Bounds as points
-            _points.Add(_boundsStartPoint);
-            _points.Add(new Point(_boundsStartPoint.X + Width, _boundsStartPoint.Y));
-            _points.Add(new Point(_boundsStartPoint.X, _boundsStartPoint.Y + Height));
-            _points.Add(new Point(_boundsStartPoint.X + Width, _boundsStartPoint.Y + Height));
-
+            //generate points
+            var timer = Stopwatch.StartNew();
+            _points = PointGenerator.Generate(_voronoiSettings);
             timer.Stop();
+            
+            //update generation timer
             var time = timer.ElapsedMilliseconds/1000.0;
             GenerationTimeText = $"Generated {PointsToGenerate} points in {time} seconds.";
 
             //update randomly generated seed
             if (UseSeed == false)
-                Seed = seed;
+                Seed = _voronoiSettings.Seed;
 
-
-            _points.FilterDoubleValues();
-
+            //update canvas
             RefreshCanvas();
         }
 
@@ -308,11 +350,11 @@ namespace CityGeneratorWPF.ViewModel
 
             //create voronoi using specified algorithm
             var timer = Stopwatch.StartNew();
-            _voronoiDiagram = VoronoiGenerator.CreateVoronoi(_points, VoronoiAlgorithm);
+            _voronoiDiagram = VoronoiGenerator.CreateVoronoi(_points, _voronoiSettings);
             timer.Stop();
 
             //set bounds
-            _voronoiDiagram.Bounds = new Point(Width, Height);
+            //_voronoiDiagram.Bounds = new Point(Width, Height);
 
             if (_voronoiDiagram == null)
                 return;
@@ -331,11 +373,15 @@ namespace CityGeneratorWPF.ViewModel
         /// </summary>
         private void GenerateCity()
         {
-            //start timer for speed check
+            //set settings for generation
+            var settings = new CitySettings()
+            {
+                DistrictSettings = DistrictSettings.ToList()
+            };
+
+            //generate city
             var timer = Stopwatch.StartNew();
-
-            _cityData = CityBuilder.GenerateCity(_voronoiDiagram);
-
+            _cityData = CityBuilder.GenerateCity(settings,_voronoiDiagram);
             timer.Stop();
 
             //update timer
@@ -347,27 +393,6 @@ namespace CityGeneratorWPF.ViewModel
 
         }
 
-        private void GenerateRoads()
-        {
-            
-            if(_cityData == null)
-                _cityData = new CityData();
-            
-            //start timer for speed check
-            var timer = Stopwatch.StartNew();
-
-
-
-            _cityData.MainRoad = CityBuilder.GenerateMainRoad(_voronoiDiagram);
-
-            timer.Stop();
-            var time = timer.ElapsedMilliseconds / 1000.0;
-            GenerationTimeText = $"City generated in {time} seconds.";
-
-            MaxRoadProgress = _cityData.MainRoad.RoadLines.Count;
-            RoadProgress = MaxRoadProgress;
-        }
-
         /// <summary>
         /// Redraw all the elements
         /// </summary>
@@ -376,9 +401,7 @@ namespace CityGeneratorWPF.ViewModel
             //clear canvas
             _drawService.ClearCanvas();
 
-            //Show Bounds
-            if (ShowBounds == true)
-                _drawService.DrawRectangle(_boundsStartPoint, Width, Height, Colors.Red);
+           
 
             DrawVoronoiDiagram();
             DrawCity();
@@ -390,9 +413,13 @@ namespace CityGeneratorWPF.ViewModel
             var triangleColor = Color.FromRgb(50, 50, 50);
             var lineColor = Color.FromRgb(22, 22, 22);
 
-
             if (_voronoiDiagram != null)
             {
+
+                //Show Bounds
+                if (ShowBounds == true)
+                    _drawService.DrawRectangle(_voronoiDiagram.Bounds, Colors.Red);
+
                 //Draw Triangulation
                 if (_voronoiDiagram.Triangulation != null)
                 {
@@ -439,11 +466,14 @@ namespace CityGeneratorWPF.ViewModel
             }
 
             //Draw Points
-            foreach (var p in _points)
+            if (DrawPoints == true)
             {
-                _drawService.DrawPoint(p, PointSize, pointColor);
-                if (ShowPointInfo == true)
-                    _drawService.DrawText(p.ToString(), pointColor, p);
+                foreach (var p in _points)
+                {
+                    _drawService.DrawPoint(p, PointSize, pointColor);
+                    if (ShowPointInfo == true)
+                        _drawService.DrawText(p.ToString(), pointColor, p);
+                }
             }
         }
 
@@ -452,59 +482,33 @@ namespace CityGeneratorWPF.ViewModel
             if (_cityData == null)
                 return;
 
+            int i = 0;
 
-            if (_cityData.Zones.Count > 0)
+            //Draw districts
+            if (DrawDistricts == true)
             {
-
-                Color[] colors = new[]
+                foreach (var district in _cityData.Districts)
                 {
-                    Colors.SaddleBrown,
-                    Colors.Gray,
-                    Colors.DarkGreen,
-                    Colors.DodgerBlue
-                };
-
-                foreach (var zone in _cityData.Zones)
-                {
-
-                    Color c = colors[(int)zone.Type];
-                    c = c.GetRandomColorOffset(0.04f);
-                    _drawService.DrawCell(zone.ZoneBounds, c, true);
+                    var c = _districtColors[i];
+                    _drawService.DrawDistrict(district, c);
+                    i++;
                 }
             }
 
-            if (_cityData.MainRoad.RoadLines.Count > 0)
+            //Draw roads
+            if (DrawRoads == true)
             {
-                foreach (var roadLine in _cityData.MainRoad.RoadLines)
+                var lineC = Colors.BlueViolet;
+                var startC = Colors.OrangeRed;
+                var endC = Colors.DodgerBlue;
+
+                foreach (var road in _cityData.Roads)
                 {
-                    var c = Colors.ForestGreen;
-                    _drawService.DrawLine(roadLine, c, 5);
-                }
-
-            }
-            //Draw start and endpoint of main road
-            _drawService.DrawPoint(_cityData.MainRoad.StartPoint, 10, Colors.OrangeRed);
-            _drawService.DrawPoint(_cityData.MainRoad.EndPoint, 10, Colors.DodgerBlue);
-
-
-
-            if (_cityData.RoadBranches.Count > 0)
-            {
-
-                foreach (var roadBranch in _cityData.RoadBranches)
-                {
-                    var c = Colors.DarkRed;
-                    foreach (var roadLine in roadBranch.RoadLines)
-                    {
-                        _drawService.DrawLine(roadLine, c, 3);
-
-                    }
-
-                    _drawService.DrawPoint(roadBranch.StartPoint, 5, Colors.YellowGreen);
-                    _drawService.DrawPoint(roadBranch.EndPoint, 5, Colors.DeepPink);
+                    _drawService.DrawRoad(road,lineC.GetRandomColorOffset(0.04),startC.GetRandomColorOffset(0.04), endC.GetRandomColorOffset(0.04), false);
 
                 }
             }
+
         }
 
         /// <summary>
@@ -536,6 +540,45 @@ namespace CityGeneratorWPF.ViewModel
 
             if (saveDlg.ShowDialog() == true)
                 exporter.Export(saveDlg.FileName, _drawService.Canvas,Width,Height);
+
+        }
+
+
+        private void AddNewCityDistrictType(string settings)
+        {
+
+            foreach (var dis in DistrictSettings)
+            {
+                if(dis.Type == settings)
+                    return;
+            }
+
+            _districtColors.Add(Extensions.Extensions.RandomColor());
+
+            DistrictSettings.Add(new DistrictSettings(settings));
+            //RaisePropertyChanged("DistrictSettings");
+            
+        }
+
+        private void RemoveCityDistrictType(string settings)
+        {
+            DistrictSettings found = null;
+            int i = 0;
+            foreach (var dis in DistrictSettings)
+            {
+                if (dis.Type == settings)
+                    found = dis;
+
+                i++;
+            }
+
+            if (found == null)
+                return;
+
+            _districtColors.RemoveAt(i);
+
+            DistrictSettings.Remove(found);
+            //RaisePropertyChanged("DistrictSettings");
 
         }
     }

@@ -1,69 +1,72 @@
 ﻿using System.Collections.Generic;
+using System.Net;
 using Voronoi;
 
 namespace CityGenerator
 {
     public class CityData
     { 
-
-        //Main Road
-        public Road MainRoad;
-        public List<Road> RoadBranches; 
+        //roads
+        public List<Road> Roads; 
         
-        //Zones(cell + type of buildings to spawn)
-        public List<Zone> Zones;
+        //districts
+        public List<District> Districts; 
 
         public CityData()
         {
-            MainRoad = new Road();
-            Zones = new List<Zone>();
-            RoadBranches = new List<Road>();
+            Roads = new List<Road>();
+            Districts = new List<District>();
         }
 
         public void Clear()
         {
-            MainRoad = new Road();
-            RoadBranches.Clear();
-            Zones.Clear();
+            Roads.Clear();
+
+            Districts.Clear();
         }
     }
 
     public class Road
     {
-        public List<Line> RoadLines = new List<Line>(); 
-        public Point StartPoint = Point.Zero;
-        public Point EndPoint = Point.Zero;
+        //Voronoi lines the road is made up of
+        public List<Line> Lines; 
+
+        //Start point of the road
+        public Point Start;
+        
+        //endpoint of the road
+        public Point End;
 
         public Road()
         {
-            RoadLines = new List<Line>();
-            StartPoint = Point.Zero;
-            EndPoint = Point.Zero;
+            Lines = new List<Line>();
+            Start = Point.Zero;
+            End = Point.Zero;
         }
     }
 
 
     /// <summary>
-    /// possible types of the zones in the city
+    /// A city can consist of multiple districts
     /// </summary>
-    public enum ZoneType:int
+    public class District
     {
-        Urban,
-        Factory,
-        Farm,
-        Water
+        //type of the district
+        public string DistrictType;
+
+        //all Voronoi cells part of this district
+        public List<Cell> Cells;
+
+        public District()
+        {
+            Cells = new List<Cell>();
+        }
     }
 
-    public class Zone
+    internal class DistrictCell
     {
-        /// <summary>
-        /// Position and bounds of the zone
-        /// </summary>
-        public Cell ZoneBounds;
-
-        /// <summary>
-        /// Indicates the type of the zone
-        /// </summary>
-        public ZoneType Type;
+        public string DistrictType;
+        public Cell Cell;
     }
+
 }

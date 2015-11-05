@@ -101,6 +101,7 @@ public class TownZone : MonoBehaviour
         buildingObject.transform.localScale = new Vector3(randomScale,randomScale,randomScale);
 
         buildingObject.transform.parent = transform;
+        buildingObject.isStatic = true;
         buildingObject.name = name;
     }
 

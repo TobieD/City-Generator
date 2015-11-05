@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Points;
 using Voronoi.Algorithms;
 
 namespace Voronoi
@@ -11,81 +12,74 @@ namespace Voronoi
     {
         BoywerWatson, //first triangulate, then connect centeroids of connecting triangles
         Fortune, //Sweep line algorithm
-        Lloyd,//keeps iterating the voronoi diagram untill all cells are equaly divided
+    }
+
+    //settings for generating the voronoi data
+    public class GenerationSettings
+    {
+        // Seed info
+        public bool UseSeed = false;
+        public int Seed = 0;
+
+        // Bounds
+        public double StartX = 0;
+        public double StartY = 0;
+        public double Width = 2500;
+        public double Length = 2500;
+        
+        // Amount of points to spawn
+        public int Amount = 500;
+
+        // Algorithms to use
+        public VoronoiAlgorithm VoronoiAlgorithm = VoronoiAlgorithm.BoywerWatson;
+        public PointGenerationAlgorithm PointAlgorithm = PointGenerationAlgorithm.Simple;
     }
 
     public static class VoronoiGenerator
     {
         /// <summary>
-        /// Generate a given amount of points in a user defined rectangle
-        /// </summary>
-        public static List<Point> GenerateRandomPoints(int amount, Point startPoint, int width, int height,int seed)
-        {
-            //Create point list
-            var points = new List<Point>();
-
-            // Seed random
-            var rnd = new Random(seed);
-
-            //Generate points and add them to the collection
-            for (var i = 0; i < amount; ++i)
-            {
-                var x = rnd.Next((int)startPoint.X, (int)startPoint.X + width);
-                var y = rnd.Next((int)startPoint.Y, (int)startPoint.Y + height);
-
-                var point = new Point(x, y);
-                points.Add(point);
-            }
-
-            return points;
-        }
-
-        /// <summary>
         /// Create a Voronoi Diagram using a list of points and a specified algorithm to use
         /// </summary>
-        public static VoronoiDiagram CreateVoronoi(List<Point> points, VoronoiAlgorithm algorithm)
+        public static VoronoiDiagram CreateVoronoi(List<Point> points, GenerationSettings settings)
         {
-            //Select algorthm to use
-            switch (algorithm)
-            {
-                case VoronoiAlgorithm.BoywerWatson:
-                    return Voronoi_BoywerWatson(points);
-                case VoronoiAlgorithm.Fortune:
-                    return Voronoi_Fortune(points);
+            VoronoiDiagram voronoi;
 
-                case VoronoiAlgorithm.Lloyd:
-                    return Voronoi_Lloyd(points);
+            var startX = settings.StartX;
+            var startY = settings.StartX;
+            var width = settings.Width;
+            var length = settings.Length;
+
+
+            //Select algorithm to use
+            switch (settings.VoronoiAlgorithm)
+            {
+                // Voronoi according to Boywer-Watson Algorithm
+                // http://paulbourke.net/papers/triangulate/
+                case VoronoiAlgorithm.BoywerWatson:
+                {
+                    voronoi = new BowyerWatsonGenerator().GetVoronoi(points);
+                        
+                    break;;
+                }
+
+                // Voronoi according to Fortunes Algorithm
+                // http://blog.ivank.net/fortunes-algorithm-and-implementation.html
+                case VoronoiAlgorithm.Fortune:
+                {
+                    voronoi = new FortuneGenerator().GetVoronoi(points);
+                        break;
+                }
 
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(algorithm), algorithm, null);
+                    throw new ArgumentOutOfRangeException(nameof(settings.VoronoiAlgorithm), settings.VoronoiAlgorithm, null);
             }
+
+
+            voronoi.Bounds = new Rectangle(startX, startY, width, length);
+
+
+            return voronoi;;
         }
 
-        /// <summary>
-        /// Voronoi according to Boywer-Watson Algorithm
-        /// http://paulbourke.net/papers/triangulate/
-        /// </summary>
-        private static VoronoiDiagram Voronoi_BoywerWatson(List<Point> points)
-        {
-            return new BowyerWatsonGenerator().GetVoronoi(points);
-        }
-
-        /// <summary>
-        /// Voronoi according to Fortunes Algorithm
-        /// http://blog.ivank.net/fortunes-algorithm-and-implementation.html
-        /// </summary>
-        private static VoronoiDiagram Voronoi_Fortune(List<Point> points)
-        {
-            return new FortuneGenerator().GetVoronoi(points);
-        }
-
-        /// <summary>
-        /// Voronoi according to Lloyd Algorithm
-        /// </summary>
-        private static VoronoiDiagram Voronoi_Lloyd(List<Point> points)
-        {
-            //return the list of triangles
-            return new LloydGenerator().GetVoronoi(points);
-        }
     }
 }

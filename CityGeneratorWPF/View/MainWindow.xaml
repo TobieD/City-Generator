@@ -92,22 +92,14 @@
                         <TextBox x:Name="txtPointsAmount" Grid.Column="1" Margin="5" Text="{Binding Main.PointsToGenerate}"/>
                     </Grid>
 
-                    <Grid Margin="5,0,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="23*"/>
-                            <ColumnDefinition Width="17*"/>
-                        </Grid.ColumnDefinitions>
-                        <Label Content="City Like" Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="114"/>
-                        <CheckBox Grid.Column="1" IsChecked="{Binding Main.CityLike}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Grid>
 
                     <Grid Margin="5,0,0,0">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="23*"/>
-                            <ColumnDefinition Width="17*"/>
+                            <ColumnDefinition Width="7*"/>
+                            <ColumnDefinition Width="13*"/>
                         </Grid.ColumnDefinitions>
-                        <Label Content="Inner Offset" Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="114"/>
-                        <TextBox Grid.Column="1" Text="{Binding Main.Offset}" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="5,4,9,4" Width="63"/>
+                        <Label Content="Point Algorithm" Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="110"/>
+                        <ComboBox Grid.Column="1" Margin="5" SelectedItem="{Binding Main.PointAlgorithm}" ItemsSource="{Binding Main.PossiblePointAlgorithms}"/>
                     </Grid>
 
                     <Grid Margin="5,0,0,0">
@@ -139,6 +131,15 @@
                         </Grid.ColumnDefinitions>
                         <Label Content="Show Bounds"/>
                         <CheckBox Grid.Column="1" Margin="25,6,30,6" IsChecked="{Binding Main.ShowBounds }" HorizontalAlignment="Center" VerticalAlignment="Center" Height="14" Width="16"/>
+                    </Grid>
+
+                    <Grid Margin="5,0,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="23*"/>
+                            <ColumnDefinition Width="17*"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Content="Draw Points" Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="114"/>
+                        <CheckBox Grid.Column="1" IsChecked="{Binding Main.DrawPoints}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Grid>
 
                     <!--Point Info-->
@@ -203,13 +204,62 @@
                 <StackPanel Orientation="Vertical" Background="#FFC8C8C8">
 
                     <Label Margin="5,0,0,0" Content="Settings" FontWeight="Bold"/>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBox Text="{Binding Main.NewType}" Width="100" Margin="5"/>
+                        <Button Content="+" Command="{Binding Main.AddSettingsCommand}" CommandParameter="{Binding Main.NewType}" Width ="20" Margin="5"/>
+                        <Button Content="-" Command="{Binding Main.RemoveSettingsCommand}" CommandParameter="{Binding Main.NewType}" Width ="20" Margin="5"/>
+                        
+                    </StackPanel>
+                    
+                    <Expander Header="District Settings">
+                    <ListView ItemsSource="{Binding Main.DistrictSettings}">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Vertical">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Label Content="Type: "/>
+                                        <Label Content="{Binding Type}"/>
+                                    </StackPanel>
+
+                                    <StackPanel Orientation="Horizontal">
+                                        <Label Content="Size: "/>
+                                        <Slider Width="100" Value="{Binding Size}" Maximum="1" Minimum="0" LargeChange="0.1"/>
+                                        </StackPanel>
+
+                                        <StackPanel Orientation="Horizontal">
+                                            <Label Content="Frequency: "/>
+                                            <Slider Width="100" Value="{Binding Frequency}" Maximum="10" Minimum="1"/>
+                                            </StackPanel>
+
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+
+                    </ListView>
+                    </Expander>
 
                     <Label Margin="5,0,0,0" Content="Visualize" FontWeight="Bold"/>
-                    <Label Content="Process"/>
-                    <Slider Margin="5,0" Maximum="{Binding Main.MaxRoadProgress}" Minimum="0" Value="{Binding Main.RoadProgress}" />
-                    
+
+                    <Grid Margin="5,0,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="23*"/>
+                            <ColumnDefinition Width="17*"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Content="Draw Districts" Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="114"/>
+                        <CheckBox Grid.Column="1" IsChecked="{Binding Main.DrawDistricts}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <Grid Margin="5,0,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="23*"/>
+                            <ColumnDefinition Width="17*"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Content="Draw Roads" Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="114"/>
+                        <CheckBox Grid.Column="1" IsChecked="{Binding Main.DrawRoads}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
+
+
                     <Label Margin="5,0,0,0" Content="Generate" FontWeight="Bold"/>
-                    <Button Margin="5,2" Content="Build Roads" Command="{Binding Main.GenerateRoadsCommand}" />
                     <Button Margin="5,2" Content="Generate Districts" Command="{Binding Main.GenerateCityCommand}" />
                     
                 </StackPanel>
