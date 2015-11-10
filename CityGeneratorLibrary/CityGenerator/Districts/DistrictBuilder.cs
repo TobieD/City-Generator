@@ -1,7 +1,9 @@
 ﻿
+using System;
 using System.Collections.Generic;
 using Helpers;
 using Voronoi;
+using Voronoi.Algorithms;
 
 namespace CityGenerator
 {
@@ -10,10 +12,12 @@ namespace CityGenerator
     /// </summary>
     internal class DistrictBuilder
     {
-        private List<DistrictCell> _districtCells; 
+        private List<DistrictCell> _districtCells;
+        private BowyerWatsonGenerator _triangulator;
 
         public List<District> CreateCityDistricts(CitySettings settings,VoronoiDiagram voronoi)
         {
+            _triangulator = new BowyerWatsonGenerator();
             var districts = new List<District>();
 
             //create districts cells from the voronoi cells
@@ -41,7 +45,7 @@ namespace CityGenerator
             {
                 if (dc.DistrictType == district.DistrictType)
                 {
-                    district.Cells.Add(dc.Cell);
+                    district.Cells.Add(dc);
                 }
             }
 
@@ -55,7 +59,6 @@ namespace CityGenerator
             //convert all cells to the same type
             foreach (var cell in voronoi.VoronoiCells)
             {
-
                 var cellCenter = MathHelpers.FindCenteroidOfCell(cell);
 
                 //check if zone is in bounds
@@ -64,13 +67,12 @@ namespace CityGenerator
                 {
                     continue;
                 }
-                
 
-                var dc = new DistrictCell
+                var dc = new DistrictCell(settings.DistrictSettings[0].Type, cell)
                 {
-                    DistrictType = settings.DistrictSettings[0].Type,
-                    Cell = cell
+                    BuildSites = GenerateBuildSites(cell)
                 };
+
                 districtCells.Add(dc);
             }
 
@@ -83,8 +85,6 @@ namespace CityGenerator
                     var startCell = districtCells.GetRandomValue();
                     var size = setting.Size * ((voronoi.Bounds.Right + voronoi.Bounds.Bottom)/8);
 
-
-
                     districtCells.TagCells(startCell, size, setting.Type);
                 }
             }
@@ -92,6 +92,27 @@ namespace CityGenerator
 
             return districtCells;
         }
+
+        private List<Point> GenerateBuildSites(Cell cell)
+        {
+            var points = new List<Point>();
+
+            //triangulate cell into triangles
+            var triangles = _triangulator.DelaunayTriangulation(cell.Points);
+
+            //find random point inside the triangles
+            var iterations = 2;
+            foreach (var triangle in triangles)
+            {
+                for (int i = 0; i < iterations; i++)
+                {
+                    var rp = triangle.RandomPointInTriangle();
+                    points.Add(rp);
+                }
+            }
+
+            return points;
+        } 
      
     }
 

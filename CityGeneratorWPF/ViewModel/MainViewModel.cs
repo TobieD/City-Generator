@@ -348,17 +348,15 @@ namespace CityGeneratorWPF.ViewModel
 
             _baseColor = Extensions.Extensions.RandomColor();
 
+            _voronoiSettings.VoronoiAlgorithm = VoronoiAlgorithm;
+
             //create voronoi using specified algorithm
             var timer = Stopwatch.StartNew();
             _voronoiDiagram = VoronoiGenerator.CreateVoronoi(_points, _voronoiSettings);
             timer.Stop();
 
-            //set bounds
-            //_voronoiDiagram.Bounds = new Point(Width, Height);
-
             if (_voronoiDiagram == null)
                 return;
-            _voronoiDiagram.Sites = _points;
 
             //update info
             var time = timer.ElapsedMilliseconds/1000.0;
@@ -498,13 +496,13 @@ namespace CityGeneratorWPF.ViewModel
             //Draw roads
             if (DrawRoads == true)
             {
-                var lineC = Colors.BlueViolet;
+                var lineC = Colors.SlateGray;
                 var startC = Colors.OrangeRed;
                 var endC = Colors.DodgerBlue;
 
                 foreach (var road in _cityData.Roads)
                 {
-                    _drawService.DrawRoad(road,lineC.GetRandomColorOffset(0.04),startC.GetRandomColorOffset(0.04), endC.GetRandomColorOffset(0.04), false);
+                    _drawService.DrawRoad(road,lineC,startC, endC, false);
 
                 }
             }

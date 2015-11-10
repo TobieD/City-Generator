@@ -27,6 +27,7 @@ namespace Points
             var startY = settings.StartY;
             var width = settings.Width;
             var length = settings.Length;
+            var amount = settings.Amount;
 
             // Seed random
             var seed = settings.UseSeed ? settings.Seed : DateTime.Now.GetHashCode();
@@ -67,9 +68,11 @@ namespace Points
             generatedPoints.Add(new Point(bounds.X + width, bounds.Y + halfLength));
            
 
+            //restore back to original settings
             settings.StartX = startX;
             settings.StartY = startY;
             settings.Width = width;
+            settings.Amount = amount;
             settings.Length = length;
             
 
@@ -106,6 +109,7 @@ namespace Points
             var startY = (int)settings.StartY;
             var width  = (int)settings.Width;
             var length = (int)settings.Length;
+            
             var offset = 0.20;
 
             //amount of points will be divided over both generations
@@ -126,6 +130,8 @@ namespace Points
             //generate inner points
             settings.Amount = (int)Math.Floor(settings.Amount * 0.7);
             points.AddRange(SimpleSpread(settings));
+
+
 
             return points;
         }

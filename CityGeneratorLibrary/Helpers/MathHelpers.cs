@@ -568,7 +568,26 @@ namespace Helpers
 
 
             return points;
-        } 
+        }
 
+
+        public static Point RandomPointInTriangle(this Triangle t)
+        {
+
+            SeedRng();
+
+            var p = Point.Zero;
+
+            //random point inside triangle
+            var r1 = _rng.NextDouble();
+            var r2 = _rng.NextDouble();
+
+            p.X = (1 - Math.Sqrt(r1))*t.Point1.X + (Math.Sqrt(r1)*(1 - r2))*t.Point2.X + (Math.Sqrt(r1)*r2)*t.Point3.X;
+            p.Y = (1 - Math.Sqrt(r1)) * t.Point1.Y + (Math.Sqrt(r1) * (1 - r2)) * t.Point2.Y + (Math.Sqrt(r1) * r2) * t.Point3.Y;
+
+
+
+            return p;
+        }
     }
 }

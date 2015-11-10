@@ -7,7 +7,7 @@ using Random = UnityEngine.Random;
 
 public class TownZone : MonoBehaviour
 {
-    private Zone _zone;
+    private DistrictCell _cell;
     private GameObject _zoneObject;
 
 	// Use this for initialization
@@ -22,15 +22,14 @@ public class TownZone : MonoBehaviour
 	
 	}
 
-    public void SetZoneData(Zone zone)
+    public void SetZoneData(DistrictCell cell)
     {
-        _zone = zone;
+        _cell = cell;
         Build();
     }
 
     private void Build()
     {
-
         DrawBounds();
 
         GenerateBuildings();
@@ -66,12 +65,12 @@ public class TownZone : MonoBehaviour
         //Add line renderer
         var line = _zoneObject.AddComponent<LineRenderer>();
         line.enabled = true;
-        line.SetVertexCount(_zone.ZoneBounds.Points.Count);
+        line.SetVertexCount(_cell.Cell.Points.Count);
         line.material = mat;
 
         //create all the points of the line
         int i = 0;
-        foreach (var point in _zone.ZoneBounds.Points)
+        foreach (var point in _cell.Cell.Points)
         {
             line.SetPosition(i, point.ToVector3());
             i++;
@@ -80,24 +79,29 @@ public class TownZone : MonoBehaviour
 
     private void GenerateBuildings()
     {
-        var prefabs = GetPrefabsForType(ZoneType.Factory.ToString());
+        var prefabs = GetPrefabsForType(_cell.DistrictType);
 
-        int index = 0;
-        GenerateBuilding(prefabs.GetRandomValue(), String.Format("Building_{0}", index +1));
+        if (prefabs.Count < 1)
+        {
+            Debug.LogWarningFormat("No prefab buildings set for {0}!\nPlease add building prefabs.",_cell.DistrictType);
+            return;
+        }
+
+        for (int i = 0; i < _cell.BuildSites.Count; i++)
+        {
+            GenerateBuilding(prefabs.GetRandomValue(), String.Format("Building_{0}", i + 1),_cell.BuildSites[i].ToVector3());
+        }
 
     }
 
-    private void GenerateBuilding(GameObject prefab, string name)
+    private void GenerateBuilding(GameObject prefab, string name, Vector3 position)
     {
-
-        //choose a random position inside the zone
-        var pos = _zone.ZoneBounds.CellPoint.ToVector3(); //take center
-
         var randomScale = Random.Range(0.7f, 1.2f);
         var randomRot = Random.rotation;
-        randomRot = prefab.transform.rotation;
+        randomRot.x = -90.0f;
+        randomRot.y = 0;
 
-        var buildingObject = (GameObject)GameObject.Instantiate(prefab,pos,randomRot);
+        var buildingObject = (GameObject)GameObject.Instantiate(prefab, position, prefab.transform.rotation);
         buildingObject.transform.localScale = new Vector3(randomScale,randomScale,randomScale);
 
         buildingObject.transform.parent = transform;
@@ -108,6 +112,9 @@ public class TownZone : MonoBehaviour
     private List<GameObject> GetPrefabsForType(string type)
     {
         var map = TownGenerator.GetInstance().PrefabsPerZone;
-        return map[type];
+        if(map.ContainsKey(type))
+            return map[type];
+
+        return null;
     } 
 }

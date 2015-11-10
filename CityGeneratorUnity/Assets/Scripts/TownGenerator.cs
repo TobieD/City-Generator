@@ -1,34 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using CityGenerator;
+using Points;
 using UnityEngine;
 using Voronoi;
 using Object = UnityEngine.Object;
-
-/// <summary>
-/// Generation settings adjustable by the window
-/// </summary>
-public class TownGenerationSettings
-{
-    public bool UseSeed = false;
-    public int Seed = 0;
-
-    
-
-    public int Width = 2500;
-    public int Height = 2500;
-    public int Amount = 500;
-    public VoronoiAlgorithm Algorithm = VoronoiAlgorithm.BoywerWatson;
-
-}
 
 /// <summary>
 /// Handles Generating a voronoi Diagram and a town based on this diagram
 /// </summary>
 public class TownGenerator:Singleton<TownGenerator>
 {
-    //Properties
-    private TownGenerationSettings _settings;
+    //Settings
+    private GenerationSettings _generationSettings;
+    private CitySettings _citySettings;
     private bool _bCanBuild = false;
 
     //Library generated data
@@ -45,13 +30,13 @@ public class TownGenerator:Singleton<TownGenerator>
     }
 
     /// Generates a voronoi diagram as a basic layout of the town
-    public void Generate(TownGenerationSettings settings)
+    public void Generate(GenerationSettings generationSettings)
     {
         //clean up previous generation and build
         Clear();
 
         //save settings
-        _settings = settings;
+        _generationSettings = generationSettings;
 
         //create a parent object at 0,0,0 if none is set
         if (Parent == null)
@@ -69,18 +54,21 @@ public class TownGenerator:Singleton<TownGenerator>
     }
 
     /// Build the town based on the generated voronoi Diagram
-    public void Build()
+    public void Build(CitySettings citySettings)
     {
         if (!_bCanBuild)
         {
             Debug.LogWarning("CityGenerator: Unable to build city. \nPlease generate data first!");
             return;
         }
+        
+        //store settings
+        _citySettings = citySettings;
 
-        _cityData = CityBuilder.GenerateCity(VoronoiDiagram);
+        //generate city using library
+        GenerateCityData();
 
-        //Create game objects for each generated zone
-        CreateZoneGameObjects();
+        
 
         //CreateRoadGameObjects();
     }
@@ -90,6 +78,7 @@ public class TownGenerator:Singleton<TownGenerator>
         _bCanBuild = false;
 
         VoronoiDiagram = null;
+        _cityData = null;
 
         //clear root game object, will clear all child objects as well.
         var prev = GameObject.Find("Town");
@@ -100,86 +89,97 @@ public class TownGenerator:Singleton<TownGenerator>
     private void GenerateVoronoiDiagram()
     {
         //seed random
-        if (!_settings.UseSeed)
-            _settings.Seed = DateTime.Now.GetHashCode();
+        if (!_generationSettings.UseSeed)
+            _generationSettings.Seed = DateTime.Now.GetHashCode();
 
         //Store Settings
-        int amount = _settings.Amount;
-        int width = _settings.Width;
-        int height = _settings.Height;
-        VoronoiAlgorithm algorithm = _settings.Algorithm;
-        int seed = _settings.Seed;
+        var width = _generationSettings.Width;
+        var length = _generationSettings.Length;
         
         //Make sure the parent is always in the center of the generation plane
-        Point startPoint = Point.Zero;
-        startPoint.X = Parent.transform.position.x - width / 2.0;
-        startPoint.Y = Parent.transform.position.z - height / 2.0;
+        _generationSettings.StartX = Parent.transform.position.x - width / 2.0;
+        _generationSettings.StartY = Parent.transform.position.z - length / 2.0;
 
         //Generate Points and diagram
-        var points = VoronoiGenerator.GenerateRandomPoints(amount, startPoint, width, height, seed);
-        VoronoiDiagram = VoronoiGenerator.CreateVoronoi(points, algorithm);
-        VoronoiDiagram.Sites = points;
-        VoronoiDiagram.Bounds = new Point(width,height);
+        var points = PointGenerator.Generate(_generationSettings);
 
+        Debug.LogFormat("Generated {0} points. expected {1}", points.Count, _generationSettings.Amount);
 
+        VoronoiDiagram = VoronoiGenerator.CreateVoronoi(points,_generationSettings);
+        
         //Add plane underneath the generated city
         var ren = Parent.AddComponent<MeshRenderer>();
         var mat = Resources.Load<Material>("Material/default");
         ren.material = mat;
-        mat.mainTextureScale = new Vector2(width/100, height/100);
 
         var filt = Parent.AddComponent<MeshFilter>();
-        filt.mesh = TownBuilder.CreateGroundPlane(width, height, 0);
+        filt.mesh = TownBuilder.CreateGroundPlane((int)width, (int)length,Parent.transform.position.y);
+
 
 
 
     }
 
-    private void CreateZoneGameObjects()
+    private void GenerateCityData()
+    {
+        //generate city districts and roads
+        _cityData = CityBuilder.GenerateCity(_citySettings,VoronoiDiagram);
+
+        //Create game objects for each generated istrict
+        CreateDistrictGameObjects();
+    }
+
+    private void CreateDistrictGameObjects()
     {
         //locate the zone parent object
-        var zoneParent = FindOrCreate("Zones");
-        zoneParent.transform.parent = Parent.transform;
+        var districtParent = FindOrCreate("Districts");
+        districtParent.transform.parent = Parent.transform;
 
-        //Create game objects for each point and add the TownZone script
-        //TownZone handles generating meshes for each zone based on its zone type.
-        for (var i = 0; i < VoronoiDiagram.VoronoiCells.Count; ++i)
+        //generate all districts that were specified
+        foreach (var district in _cityData.Districts)
         {
-            //access the current cell
-            Cell cell = VoronoiDiagram.VoronoiCells[i];
-            string name = "Zone_" + (i + 1);
+            
+            //create district Empty Gameobject
+            var districtObject = new GameObject(district.DistrictType + " District");
+            districtObject.transform.parent = districtParent.transform;
 
-            CreateZoneGameObjectFromCell(cell, name, zoneParent);
+            //Generate all the cells of the district
+            for(int i = 0; i < district.Cells.Count; i++)
+            {
+                var cell = district.Cells[i];
+                var name = "Cell " + (i + 1);
+                CreateDistrictCell(cell, name, districtObject);
+            }
         }
+
+      
     }
     
-    private void CreateZoneGameObjectFromCell(Cell cell, string name, GameObject parent)
+    private void CreateDistrictCell(DistrictCell cell, string name, GameObject parent)
     {
-        //Create simple game object(sphere will be removed eventually)
+        //Create simple game object
         var newGameObj = new GameObject(name);
         newGameObj.transform.parent = parent.transform;
-        newGameObj.transform.position = cell.CellPoint.ToVector3();
+        newGameObj.transform.position = cell.Cell.SitePoint.ToVector3();
 
         //Add town Zone Component
         var townZone = newGameObj.AddComponent<TownZone>();
-        var zone = new Zone { ZoneBounds = cell };
-        townZone.SetZoneData(zone);
+        
+        townZone.SetZoneData(cell);
 
-        //WARNING: Move this to library
-        //zone.ZoneBounds.Points.FilterDoubleValues();
     }
 
     private void CreateRoadGameObjects()
     {
-        var roadParent = FindOrCreate("Roads");
-        roadParent.transform.parent = Parent.transform;
+        //var roadParent = FindOrCreate("Roads");
+        //roadParent.transform.parent = Parent.transform;
 
         //Debug only
-        for(int i = 0; i < _cityData.MainRoad.RoadLines.Count; i++)
+        //for(int i = 0; i < _cityData.MainRoad.RoadLines.Count; i++)
         {
-            Line line = _cityData.MainRoad.RoadLines[i];
-            string name = "road_" + (i + 1);
-            CreateRoadGameObjectFromLine(line,name, roadParent);
+            //Line line = _cityData.MainRoad.RoadLines[i];
+            //string name = "road_" + (i + 1);
+           // CreateRoadGameObjectFromLine(line,name, roadParent);
 
         }
         

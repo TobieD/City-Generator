@@ -55,18 +55,31 @@ namespace CityGenerator
         public string DistrictType;
 
         //all Voronoi cells part of this district
-        public List<Cell> Cells;
+        public List<DistrictCell> Cells;
 
         public District()
         {
-            Cells = new List<Cell>();
+            Cells = new List<DistrictCell>();
         }
     }
 
-    internal class DistrictCell
+    public class DistrictCell
     {
         public string DistrictType;
+
         public Cell Cell;
+
+        //spots possible buildings will be spawned
+        public List<Point> BuildSites;
+
+
+        public DistrictCell(string type, Cell cell)
+        {
+            DistrictType = type;
+            Cell = cell;
+            BuildSites = new List<Point>();
+        }
     }
+
 
 }

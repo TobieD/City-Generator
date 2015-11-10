@@ -76,7 +76,7 @@ namespace Voronoi
 
 
             voronoi.Bounds = new Rectangle(startX, startY, width, length);
-
+            voronoi.Sites = points;
 
             return voronoi;;
         }

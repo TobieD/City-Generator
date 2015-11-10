@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using CityGenerator;
+using Points;
 using UnityEngine;
 using UnityEditor;
 using Voronoi;
@@ -10,15 +11,17 @@ using Voronoi;
 public class TownGeneratorWindow : EditorWindow
 {
     private TownGenerator _townGenerator;
-    private TownGenerationSettings _settings;
+    private GenerationSettings _generationSettings;
+    private CitySettings _citySettings;
 
     //zone prefab selector
-    private Dictionary<string, ZoneTypePrefabSelector> _prefabSelectors = new Dictionary<string, ZoneTypePrefabSelector>();
+    private Dictionary<string, DistrictEditor> _prefabSelectors = new Dictionary<string, DistrictEditor>();
     private string _zoneInput = "";
 
     //Foldouts
     private bool _foldoutSettings = true;
     private bool _foldoutZoneEdit = false;
+    private GUIStyle _foldoutStyle;
 
     //Add menu to the window menu
     [MenuItem("TownGenerator Tool/TownGenerator")]
@@ -36,12 +39,36 @@ public class TownGeneratorWindow : EditorWindow
         if (_townGenerator == null)
         {
             _townGenerator = TownGenerator.GetInstance();
-            _settings = new TownGenerationSettings();
+            _generationSettings = new GenerationSettings();
+            _citySettings = new CitySettings();
+            
+            _generationSettings.VoronoiAlgorithm = VoronoiAlgorithm.Fortune;
+            _generationSettings.PointAlgorithm = PointGenerationAlgorithm.CityLike;;
 
             //base types
-            CreatePrefabSelection(ZoneType.Factory.ToString());
-            CreatePrefabSelection(ZoneType.Farm.ToString());
-            CreatePrefabSelection(ZoneType.Urban.ToString());
+            CreatePrefabSelection("Grass");
+            CreatePrefabSelection("Urban");
+            CreatePrefabSelection("Factory");
+
+            //foldout style
+            _foldoutStyle = new GUIStyle(EditorStyles.foldout)
+            {
+                fontStyle = FontStyle.Bold,
+                //fontSize = 10,
+            };
+
+            var c = Color.black;
+            _foldoutStyle.onActive.textColor = c;
+            _foldoutStyle.normal.textColor = c;
+            _foldoutStyle.onNormal.textColor = c;
+            _foldoutStyle.hover.textColor = c;
+            _foldoutStyle.onHover.textColor = c;
+            _foldoutStyle.focused.textColor = c;
+            _foldoutStyle.onFocused.textColor = c;
+            _foldoutStyle.active.textColor = c;
+            _foldoutStyle.onActive.textColor = c;
+
+
 
         }
 
@@ -58,8 +85,6 @@ public class TownGeneratorWindow : EditorWindow
 
         ZonePrefabSelection();
 
-
-
          //Draw Buttons
          GenerationButtons();
 
@@ -67,8 +92,8 @@ public class TownGeneratorWindow : EditorWindow
 
     private void GenerationSettings()
     {
-        GUILayout.Label("Settings that adjust the generation of the city", EditorStyles.boldLabel);
-        _foldoutSettings = EditorGUILayout.Foldout(_foldoutSettings, "Generation Settings");
+        //GUILayout.Label("Generation Settings", EditorStyles.boldLabel);
+        _foldoutSettings = EditorGUILayout.Foldout(_foldoutSettings, "Generation Settings", _foldoutStyle);
 
         if (!_foldoutSettings)
         {
@@ -77,26 +102,27 @@ public class TownGeneratorWindow : EditorWindow
 
 
         //Seed
-        GUILayout.Label("Use a seed for generation", EditorStyles.boldLabel);
+        GUILayout.Label("Seed", EditorStyles.boldLabel);
         GUILayout.BeginHorizontal();
-        _settings.UseSeed = EditorGUILayout.Toggle("Use Seed", _settings.UseSeed);
-        if (_settings.UseSeed)
+        _generationSettings.UseSeed = EditorGUILayout.Toggle("Use Seed", _generationSettings.UseSeed);
+        if (_generationSettings.UseSeed)
         {
-            _settings.Seed = EditorGUILayout.IntField("Seed", _settings.Seed);
+            _generationSettings.Seed = EditorGUILayout.IntField("Seed", _generationSettings.Seed);
             
         }
         GUILayout.EndHorizontal();
 
-        GUILayout.Label("Adjust generation bounds", EditorStyles.boldLabel);
+        GUILayout.Label("Generation bounds", EditorStyles.boldLabel);
         //Width and Height
-        _settings.Width = EditorGUILayout.IntField("Width",_settings.Width);
-        _settings.Height = EditorGUILayout.IntField("Height",_settings.Height);
+        _generationSettings.Width = EditorGUILayout.IntField("Width",(int)_generationSettings.Width);
+        _generationSettings.Length = EditorGUILayout.IntField("Length",(int)_generationSettings.Length);
 
         //parent object to spawn the town on
         _townGenerator.Parent = (GameObject)EditorGUILayout.ObjectField("Parent", _townGenerator.Parent, typeof (GameObject), true);
 
         //Algorithm used
-        _settings.Algorithm = (VoronoiAlgorithm)EditorGUILayout.EnumPopup("Algorithm", _settings.Algorithm);
+        _generationSettings.PointAlgorithm = (PointGenerationAlgorithm)EditorGUILayout.EnumPopup("Point Method", _generationSettings.PointAlgorithm);
+        _generationSettings.VoronoiAlgorithm = (VoronoiAlgorithm)EditorGUILayout.EnumPopup("Voronoi Method", _generationSettings.VoronoiAlgorithm);
 
         GUILayout.Space(25);
 
@@ -107,13 +133,17 @@ public class TownGeneratorWindow : EditorWindow
         GUILayout.BeginHorizontal();
         if (GUILayout.Button("Generate"))
         {
-            _townGenerator.Generate(_settings);
+            _townGenerator.Generate(_generationSettings);
             _townGenerator.PrefabsPerZone = MakePrefabList();
         }
 
         if (GUILayout.Button("Build"))
         {
-            _townGenerator.Build();
+            //Store district information
+            _citySettings.DistrictSettings = MakeDistrictSettings();
+
+
+            _townGenerator.Build(_citySettings);
         }
 
         if (GUILayout.Button("Clear"))
@@ -128,25 +158,32 @@ public class TownGeneratorWindow : EditorWindow
     //select prefabs for a specific zone
     private void ZonePrefabSelection()
     {
-        GUILayout.Label("Settings that adjust the buildings spawned during generation", EditorStyles.boldLabel);
-        _foldoutZoneEdit = EditorGUILayout.Foldout(_foldoutZoneEdit, "Zone Settings");
+        //GUILayout.Label("City Settings", EditorStyles.boldLabel);
+        _foldoutZoneEdit = EditorGUILayout.Foldout(_foldoutZoneEdit, "District Settings", _foldoutStyle);
 
         if (!_foldoutZoneEdit)
         {
             return;
         }
+
+
         
-        GUILayout.Label("Add or remove zone types", EditorStyles.boldLabel);
+        GUILayout.Label("Add District", EditorStyles.boldLabel);
         //allow user to add custom zone types
         AddOrRemoveZoneType();
 
-        GUILayout.Label("Select prefabs for zone types",EditorStyles.boldLabel);
-        //manage selecting of the prefab game objects the user wants to spawn in a specific zone type
-        foreach (var prefabSelect in _prefabSelectors.Values)
+        if (_prefabSelectors.Count > 0)
         {
-            prefabSelect.DrawGUI();
-            GUILayout.Space(10);
+            GUILayout.Label("Edit Districts", EditorStyles.boldLabel);
+            //manage selecting of the prefab game objects the user wants to spawn in a specific zone type
+            foreach (var prefabSelect in _prefabSelectors.Values)
+            {
+                //draw districtEditor
+                prefabSelect.DrawGUI(_foldoutStyle);
+                GUILayout.Space(10);
+            }
         }
+
 
         GUILayout.Space(25);
     }
@@ -154,7 +191,7 @@ public class TownGeneratorWindow : EditorWindow
     private void AddOrRemoveZoneType()
     {
         EditorGUILayout.BeginHorizontal();
-        GUILayout.Label("Add new zone");
+        GUILayout.Label("Add new district");
         _zoneInput = GUILayout.TextField(_zoneInput);
 
         //add type
@@ -183,12 +220,27 @@ public class TownGeneratorWindow : EditorWindow
             return;
         }
 
-        _prefabSelectors.Add(type,new ZoneTypePrefabSelector(type));
+        _prefabSelectors.Add(type,new DistrictEditor(type));
         
     }
 
+    /// <summary>
+    /// returns a look up map that contains all the prefabs per district
+    /// </summary>
     private Dictionary<string, List<GameObject>> MakePrefabList()
     {
         return _prefabSelectors.ToDictionary(pfS => pfS.Key, pfS => pfS.Value.GetActualPrefabs());
     }
+
+    private List<DistrictSettings> MakeDistrictSettings()
+    {
+
+        var settings = new List<DistrictSettings>();
+        foreach (var districtEditor in _prefabSelectors)
+        {
+            settings.Add(districtEditor.Value.GetSettings());
+        }
+
+        return settings;
+    } 
 }

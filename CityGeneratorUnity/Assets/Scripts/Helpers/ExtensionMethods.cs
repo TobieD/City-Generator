@@ -62,9 +62,9 @@ public static class TownBuilder
         return mesh;
     }
 
-    public static Mesh CreateZoneBoundMesh(Zone zone, float height)
+    public static Mesh CreateZoneBoundMesh(DistrictCell cell, float height)
     {
-        var points = zone.ZoneBounds.Points;
+        var points = cell.Cell.Points;
         
         var normals = new Vector3[points.Count + 1];
         for (int i = 0; i < normals.Length; i++)
@@ -75,7 +75,7 @@ public static class TownBuilder
 
         //Vertices
         var vertices = new Vector3[points.Count + 1];
-        Vector3 center = MathHelpers.FindCenteroidOfCell(zone.ZoneBounds).ToVector3();
+        Vector3 center = MathHelpers.FindCenteroidOfCell(cell.Cell).ToVector3();
         vertices[0] = center;
         for (int i = 1; i < vertices.Length -1; i++)
         {

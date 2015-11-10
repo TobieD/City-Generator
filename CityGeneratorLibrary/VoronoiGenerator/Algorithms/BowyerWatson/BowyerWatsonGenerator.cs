@@ -7,7 +7,7 @@ namespace Voronoi.Algorithms
     /// <summary>
     /// Helper class for generating a Voronoi Diagram using the Bowyer Watson algorithm
     /// </summary>
-    internal class BowyerWatsonGenerator
+    public class BowyerWatsonGenerator
     {
 
         private VoronoiDiagram _voronoi;
@@ -36,7 +36,7 @@ namespace Voronoi.Algorithms
         /// <summary>
         /// Create Delaunay Triangulation of a given list of points
         /// </summary>
-        private List<Triangle> DelaunayTriangulation(IList<Point> points)
+        public List<Triangle> DelaunayTriangulation(IList<Point> points)
         {
             //0. Need atleast 3 points before we can triangulate
             if (points.Count < 3)

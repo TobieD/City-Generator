@@ -259,9 +259,22 @@ namespace CityGeneratorWPF.Service
             foreach (var cell in district.Cells)
             {
 
-                DrawCell(cell, c.GetRandomColorOffset(0.07));
-                DrawCell(cell, c.GetRandomColorOffset(0.07));
+                DrawCell(cell.Cell, c.GetRandomColorOffset(0.07));
             };
+
+            foreach (var cell in district.Cells)
+            {
+
+                foreach (var buildSite in cell.BuildSites)
+                {
+                    DrawPoint(buildSite, 5, Colors.DarkRed);
+                }
+
+
+
+            };
+
+           
         }
 
         public void DrawRoad(Road road, Color linecolor, Color startColor, Color endColor, bool drawStartEnd = true)

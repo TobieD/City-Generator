@@ -1,6 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
-using Helpers;
 using Voronoi;
 
 namespace CityGenerator
@@ -53,10 +51,10 @@ namespace CityGenerator
             //Generate the city
             var cityData = new CityData();
 
-            //Divide the voronoi cells into districts
-            //cityData.Zones = CreateCityZones(voronoi);
-
+            //divide the city into districts
             cityData.Districts = _districtBuilder.CreateCityDistricts(settings,voronoi);
+
+            //generate the roads
             cityData.Roads = _roadBuilder.BuildRoads(voronoi);
 
 
