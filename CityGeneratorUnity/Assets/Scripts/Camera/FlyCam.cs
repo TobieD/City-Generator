@@ -12,12 +12,16 @@ public class FlyCam : MonoBehaviour
     private float _shiftAdd = 5.0f; //will be multiplied by how long shift is held
     private float _runTime = 0.0f; //duration shift is held
 
-    
+    public bool isActive = true;
+
+
     private Vector3 _lastMousePos = new Vector3(255,255,255); //centered to screen
 
 	// Update is called once per frame
-    private void Update()
+    private void FixedUpdate()
 	{
+        if (!isActive)
+            return;
 
         if (Input.GetKeyDown(KeyCode.Escape))
         {
@@ -57,7 +61,7 @@ public class FlyCam : MonoBehaviour
 	    else
 	    {
 	        _runTime = Mathf.Clamp(_runTime*0.5f, 1.0f, 1000.0f);
-	        direction = direction*Speed;
+	        direction = direction*Speed * Time.deltaTime;
 	    }
 
         //move 
@@ -72,6 +76,8 @@ public class FlyCam : MonoBehaviour
 	    }
 
 	}
+
+    
 
     private Vector3 GetDirection()
     {

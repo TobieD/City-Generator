@@ -43,10 +43,14 @@ namespace CityGeneratorWPF.ViewModel
         public RelayCommand ExportPngCommand
             => _exportPngCommand ?? (_exportPngCommand = new RelayCommand(() => Export(new CanvasToPngService())));
 
-       private RelayCommand _generateCityCommand;
-
+        private RelayCommand _generateCityCommand;
         public RelayCommand GenerateCityCommand
             => _generateCityCommand ?? (_generateCityCommand = new RelayCommand(GenerateCity));
+
+
+        private RelayCommand _redrawCityCommand;
+        public RelayCommand RedrawCityCommand
+            => _redrawCityCommand ?? (_redrawCityCommand = new RelayCommand(RefreshCanvas));
 
         private RelayCommand<string> _AddSettingsCommand;
 
@@ -85,7 +89,7 @@ namespace CityGeneratorWPF.ViewModel
         /// <summary>
         /// Amount of points to generate
         /// </summary>
-        private int _pointsToGenerate = 2500;
+        private int _pointsToGenerate = 750;
 
         public int PointsToGenerate
         {
@@ -121,9 +125,9 @@ namespace CityGeneratorWPF.ViewModel
         /// <summary>
         /// Settings of the bounds in which the points will be spawned
         /// </summary>
-        public int Width { get; set; } = 1600;
+        public int Width { get; set; } = 1400;
 
-        public int Height { get; set; } = 900;
+        public int Height { get; set; } = 700;
 
         public int StartX { get; set; } = 50;
 
@@ -145,6 +149,7 @@ namespace CityGeneratorWPF.ViewModel
 
         public bool? DrawDistricts { get; set; } = false;
         public bool? DrawRoads { get; set; } = true;
+        public bool? DrawRivers { get; set; } = true;
 
         /// <summary>
         /// algorithm used to generate Delaunay Triangulation
@@ -159,6 +164,40 @@ namespace CityGeneratorWPF.ViewModel
 
         public IEnumerable<PointGenerationAlgorithm> PossiblePointAlgorithms
             => Enum.GetValues(typeof(PointGenerationAlgorithm)).Cast<PointGenerationAlgorithm>();
+
+        public RoadGenMethod RoadGenMethod { get; set; } = RoadGenMethod.Grid;
+
+        public IEnumerable<RoadGenMethod> PossibleRoadGenMethods
+            => Enum.GetValues(typeof(RoadGenMethod)).Cast<RoadGenMethod>();
+
+        public string NewType { get; set; } = "newType";
+
+
+        private GenerationSettings _voronoiSettings;
+        private CitySettings _citySettings;
+
+        private ObservableCollection<DistrictSettings> _DistrictSettings = new ObservableCollection<DistrictSettings>();
+        public ObservableCollection<DistrictSettings> DistrictSettings
+        {
+            get { return _DistrictSettings; }
+            set
+            {
+                _DistrictSettings = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        private ObservableCollection<RoadSettings> _roadRiverSettings = new ObservableCollection<RoadSettings>();
+
+        public ObservableCollection<RoadSettings> RoadRiverSettings
+        {
+            get { return _roadRiverSettings; }
+            set
+            {
+                _roadRiverSettings = value;
+                RaisePropertyChanged();
+            }
+        }
 
         /// <summary>
         /// Generation Info
@@ -227,9 +266,6 @@ namespace CityGeneratorWPF.ViewModel
 
         private Color _baseColor = Colors.OrangeRed;
 
-        #endregion
-
-
         //district settings
         private List<Color> _districtColors = new List<Color>()
         {
@@ -251,20 +287,12 @@ namespace CityGeneratorWPF.ViewModel
 
         };
 
-        public string NewType { get; set; } = "newType";
+        #endregion
 
-        private ObservableCollection<DistrictSettings> _DistrictSettings = new ObservableCollection<DistrictSettings>();
-        private GenerationSettings _voronoiSettings;
 
-        public ObservableCollection<DistrictSettings> DistrictSettings
-        {
-            get { return _DistrictSettings; }
-            set
-            {
-                _DistrictSettings = value;
-                RaisePropertyChanged();
-            }
-        }
+
+
+
 
         /// <summary>
         /// Initialize this viewModel
@@ -280,16 +308,25 @@ namespace CityGeneratorWPF.ViewModel
             _voronoiDiagram = new VoronoiDiagram();
             _cityData = new CityData();
 
+            _citySettings = new CitySettings();
+
             //seed for random generation
             Seed = DateTime.Now.GetHashCode();
 
 
+            //store default settings
             foreach (var districtType in _districtTypes)
             {
                 DistrictSettings.Add(new DistrictSettings(districtType));
             }
 
             RaisePropertyChanged("DistrictSettings");
+
+
+            RoadRiverSettings.Add(_citySettings.RoadSettings);
+            RoadRiverSettings.Add(_citySettings.RiverSettings);
+
+            
 
         }
 
@@ -371,15 +408,20 @@ namespace CityGeneratorWPF.ViewModel
         /// </summary>
         private void GenerateCity()
         {
-            //set settings for generation
-            var settings = new CitySettings()
+            if (_voronoiDiagram == null)
             {
-                DistrictSettings = DistrictSettings.ToList()
-            };
+                return;
+            }
+
+
+            _citySettings.DistrictSettings = DistrictSettings.ToList();
+            _citySettings.RoadSettings = RoadRiverSettings[0];
+            _citySettings.RiverSettings = RoadRiverSettings[1];
+            _citySettings.RoadGenMethod = RoadGenMethod;
 
             //generate city
             var timer = Stopwatch.StartNew();
-            _cityData = CityBuilder.GenerateCity(settings,_voronoiDiagram);
+            _cityData = CityBuilder.GenerateCity(_citySettings,_voronoiDiagram);
             timer.Stop();
 
             //update timer
@@ -438,7 +480,10 @@ namespace CityGeneratorWPF.ViewModel
                 if (_voronoiDiagram.VoronoiCells != null && ColorVoronoi == true)
                 {
                     foreach (var cell in _voronoiDiagram.VoronoiCells)
-                        _drawService.DrawPolygon(cell.Points, _baseColor.GetRandomColorOffset(0.2));
+                    {
+                        //_drawService.DrawPolygon(cell.Points, _baseColor.GetRandomColorOffset(0.2));
+                        _drawService.DrawCell(cell, _baseColor.GetRandomColorOffset(0.2));
+                    }
                 }
 
 
@@ -483,29 +528,14 @@ namespace CityGeneratorWPF.ViewModel
             int i = 0;
 
             //Draw districts
-            if (DrawDistricts == true)
+            foreach (var district in _cityData.Districts)
             {
-                foreach (var district in _cityData.Districts)
-                {
-                    var c = _districtColors[i];
-                    _drawService.DrawDistrict(district, c);
-                    i++;
-                }
+                var c = _districtColors[i];
+                _drawService.DrawDistrict(district, c,DrawRoads.Value, DrawDistricts.Value);
+                i++;
             }
 
-            //Draw roads
-            if (DrawRoads == true)
-            {
-                var lineC = Colors.SlateGray;
-                var startC = Colors.OrangeRed;
-                var endC = Colors.DodgerBlue;
-
-                foreach (var road in _cityData.Roads)
-                {
-                    _drawService.DrawRoad(road,lineC,startC, endC, false);
-
-                }
-            }
+         
 
         }
 

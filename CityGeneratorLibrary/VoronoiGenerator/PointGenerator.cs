@@ -5,13 +5,11 @@ using Voronoi;
 
 namespace Points
 {
-
     public enum PointGenerationAlgorithm:int
     {
         
         Simple, //simple point generation
         CityLike, //generates additional points in the center of the generation plane
-
     }
 
 

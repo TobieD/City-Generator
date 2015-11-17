@@ -1,11 +1,26 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Voronoi;
 
 namespace CityGenerator
 {
+    //method used for generating roads
+    public enum RoadGenMethod
+    {
+        Voronoi,
+        Grid
+    }
+
+
+
     public class CitySettings
     {
         public List<DistrictSettings> DistrictSettings;
+
+        public RoadGenMethod RoadGenMethod = RoadGenMethod.Grid;
+
+        public RoadSettings RoadSettings = new RoadSettings(75,3, 1,"Road");
+        public RoadSettings RiverSettings = new RoadSettings(7,1, 1,"River");
     }
 
     public class DistrictSettings
@@ -26,12 +41,31 @@ namespace CityGenerator
         }
     }
 
+    public class RoadSettings
+    {
+        public int Amount { get; set; }
+
+        //number of branches going from the original road
+        public int Branches { get; set; }
+
+        //max amount of lines connected
+        public int Max { get; set; }
+
+        public string Type { get; private set; }
+
+        public RoadSettings(int max, int branches, int amount,string type)
+        {
+            Amount = amount;
+            Max = max;
+            Branches = branches;
+            Type = type;
+        }
+    }
 
     public static class CityBuilder
     {
         //builder helpers
         private static DistrictBuilder _districtBuilder;
-        private static RoadBuilder _roadBuilder;
 
         public static bool UseRandomStartEndPoint = true;
 
@@ -43,20 +77,11 @@ namespace CityGenerator
                 _districtBuilder = new DistrictBuilder();
             }
 
-            if (_roadBuilder == null)
-            {
-                _roadBuilder = new RoadBuilder();
-            }
-
             //Generate the city
             var cityData = new CityData();
 
             //divide the city into districts
             cityData.Districts = _districtBuilder.CreateCityDistricts(settings,voronoi);
-
-            //generate the roads
-            cityData.Roads = _roadBuilder.BuildRoads(voronoi);
-
 
             return cityData;
         }

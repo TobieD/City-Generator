@@ -6,22 +6,16 @@ namespace CityGenerator
 {
     public class CityData
     { 
-        //roads
-        public List<Road> Roads; 
-        
         //districts
         public List<District> Districts; 
 
         public CityData()
         {
-            Roads = new List<Road>();
             Districts = new List<District>();
         }
 
         public void Clear()
         {
-            Roads.Clear();
-
             Districts.Clear();
         }
     }
@@ -57,6 +51,8 @@ namespace CityGenerator
         //all Voronoi cells part of this district
         public List<DistrictCell> Cells;
 
+       
+
         public District()
         {
             Cells = new List<DistrictCell>();
@@ -71,6 +67,9 @@ namespace CityGenerator
 
         //spots possible buildings will be spawned
         public List<Point> BuildSites;
+
+        //The road that goes through the zone
+        public Road Road;
 
 
         public DistrictCell(string type, Cell cell)

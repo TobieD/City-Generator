@@ -5,6 +5,40 @@ using Voronoi;
 
 namespace Helpers
 {
+
+    public static class RandomGen
+    {
+
+        public static int Random(int min, int max)
+        {
+            SeedRandom();
+
+            return _rng.Next(min, max);
+        }
+
+        public static bool RandomBool()
+        {
+            SeedRandom();
+
+            var i = _rng.Next(0, 1);
+
+            return (i == 1) ? true : false;
+
+
+        }
+
+        private static Random _rng;
+
+        private static void SeedRandom()
+        {
+            if (_rng == null)
+            {
+                _rng = new Random(DateTime.Now.GetHashCode());
+            }
+        }
+    }
+
+
     public static class MathHelpers
     {
         /// <summary>
@@ -589,5 +623,108 @@ namespace Helpers
 
             return p;
         }
+
+
+        public static Point FindRandomPointOnLine(this Line line, double min, double max)
+        {
+            //get points of line
+            var p1 = line.Point1;
+            var p2 = line.Point2;
+
+            var p = Point.Zero;
+
+            var t =_rng.NextDouble();
+
+            
+
+            if (t < min)
+            {
+                t = min;
+            }
+            else if (t > max)
+                t = max;
+
+            p.X = p1.X + t*(p2.X - p1.X);
+            p.Y = p1.Y + t * (p2.Y - p1.Y);
+
+            return p;
+
+        }
+
+        public static Point FindPerpendicularPointOnLine(this Line l, Point p3)
+        {
+
+            var p = Point.Zero;
+            var p1 = l.Point1;
+            var p2 = l.Point2;
+
+
+
+            var dx = p2.X - p1.X;
+            var dy = p2.Y - p1.Y;
+
+            p.X = dy;
+            p.Y = -dx;
+
+
+            return p3 + p;
+        }
+
+        public static List<Cell> GetCellsInBounds(this VoronoiDiagram voronoi)   
+        {
+            var cells = new List<Cell>();
+
+
+            foreach (var cell in voronoi.VoronoiCells)
+            {
+                var cellCenter = MathHelpers.FindCenteroidOfCell(cell);
+
+                //check if zone is in bounds (avoid generating infinitely large zones)
+                if (cellCenter.X > voronoi.Bounds.Right || cellCenter.Y > voronoi.Bounds.Bottom
+                    || cellCenter.X < voronoi.Bounds.Left || cellCenter.Y < voronoi.Bounds.Top)
+                {
+                    continue;
+                }
+
+                cells.Add(cell);
+            }
+
+
+            return cells;
+        }
+
+
+        public static Line ExtendLine(this Line line, double length)
+        {
+
+            var p1 = line.Point1;
+            var p2 = line.Point2;
+
+
+            var lengthOfLine = DistanceBetweenPoints(p1, p2);
+
+            var c = Point.Zero;
+            var d = p1;
+            
+            c.X = p2.X + (p2.X - p1.X)/lengthOfLine*length;
+            c.Y = p2.Y + (p2.Y - p1.Y) / lengthOfLine * length;
+
+            if (RandomGen.RandomBool())
+            {
+                d.X = p1.X + (p1.X - p2.X)/lengthOfLine*length;
+                d.Y = p1.Y + (p1.Y - p2.Y)/lengthOfLine*length;
+            }
+
+
+
+            return new Line(d,c);
+        }
+
+        public static Point Center(this Line line)
+
+        {
+            return FindCenterOfLine(line);
+        }
+
     }
 }

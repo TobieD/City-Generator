@@ -69,11 +69,14 @@ namespace Voronoi.Algorithms
                 if (_siteCells.ContainsKey(pLeft) == false || _siteCells.ContainsKey(pRight) == false)
                     continue;
 
+                var line = new Line(p1,p2);
                 _siteCells[pLeft].AddPoint(p1);
                 _siteCells[pLeft].AddPoint(p2);
+                _siteCells[pLeft].AddLine(line);
 
                 _siteCells[pRight].AddPoint(p1);
                 _siteCells[pRight].AddPoint(p2);
+                _siteCells[pRight].AddLine(line);
 
             }
 

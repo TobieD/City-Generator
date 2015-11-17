@@ -1,6 +1,7 @@
 ﻿
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Helpers;
 using Voronoi;
 using Voronoi.Algorithms;
@@ -13,23 +14,17 @@ namespace CityGenerator
     internal class DistrictBuilder
     {
         private List<DistrictCell> _districtCells;
-        private BowyerWatsonGenerator _triangulator;
+        private BowyerWatsonGenerator _triangulator = new BowyerWatsonGenerator();
+        private RoadBuilder _roadBuilder = new RoadBuilder();
+
 
         public List<District> CreateCityDistricts(CitySettings settings,VoronoiDiagram voronoi)
         {
-            _triangulator = new BowyerWatsonGenerator();
-            var districts = new List<District>();
-
             //create districts cells from the voronoi cells
             _districtCells = GenerateDistrictCells(settings, voronoi);
             
-            //create districts from the cells.
-            foreach (var districtType in settings.DistrictSettings)
-            {
-                districts.Add(CreateDistrict(districtType));
-            }
-
-            return districts;
+            //create districts from the  corresponding district cells
+            return settings.DistrictSettings.Select(CreateDistrict).ToList();
         }
 
         /// <summary>
@@ -40,7 +35,6 @@ namespace CityGenerator
             var district = new District {DistrictType = settings.Type };
 
             //find all cells with the corresponding district type
-
             foreach (var dc in _districtCells)
             {
                 if (dc.DistrictType == district.DistrictType)
@@ -56,22 +50,19 @@ namespace CityGenerator
         {
             var districtCells = new List<DistrictCell>();
 
-            //convert all cells to the same type
-            foreach (var cell in voronoi.VoronoiCells)
+            var build = false;
+
+            //Create a district cell from the voronoi cells
+            foreach (var cell in voronoi.GetCellsInBounds())
             {
-                var cellCenter = MathHelpers.FindCenteroidOfCell(cell);
+                var dc = new DistrictCell(settings.DistrictSettings[0].Type, cell);
 
-                //check if zone is in bounds
-                if (cellCenter.X > voronoi.Bounds.Right || cellCenter.Y > voronoi.Bounds.Bottom
-                    || cellCenter.X < voronoi.Bounds.Left || cellCenter.Y < voronoi.Bounds.Top)
+                //generate a road inside the district cell
+                if (!build)
                 {
-                    continue;
+                    //build = true;
+                    dc.Road = _roadBuilder.BuildRoad(settings.RoadSettings, cell);
                 }
-
-                var dc = new DistrictCell(settings.DistrictSettings[0].Type, cell)
-                {
-                    BuildSites = GenerateBuildSites(cell)
-                };
 
                 districtCells.Add(dc);
             }
@@ -83,37 +74,18 @@ namespace CityGenerator
                 {
                     //Get a random start cell from the voronoi
                     var startCell = districtCells.GetRandomValue();
+
+                    //size is a ratio of the width and length of the plane
                     var size = setting.Size * ((voronoi.Bounds.Right + voronoi.Bounds.Bottom)/8);
 
+                    //tag cell
                     districtCells.TagCells(startCell, size, setting.Type);
                 }
             }
 
-
             return districtCells;
         }
-
-        private List<Point> GenerateBuildSites(Cell cell)
-        {
-            var points = new List<Point>();
-
-            //triangulate cell into triangles
-            var triangles = _triangulator.DelaunayTriangulation(cell.Points);
-
-            //find random point inside the triangles
-            var iterations = 2;
-            foreach (var triangle in triangles)
-            {
-                for (int i = 0; i < iterations; i++)
-                {
-                    var rp = triangle.RandomPointInTriangle();
-                    points.Add(rp);
-                }
-            }
-
-            return points;
-        } 
-     
+        
     }
 
     internal static class CellTagger

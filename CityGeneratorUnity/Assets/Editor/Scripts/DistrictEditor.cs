@@ -31,20 +31,17 @@ public class DistrictEditor
             return;
         }
 
-        GUILayout.Label("Settings", EditorStyles.boldLabel);
 
+        //GUILayout.Label("Settings", EditorStyles.boldLabel);
+        EditorGUI.indentLevel++;
 
-        GUILayout.Label("Frequency");
-        _districtSettings.Frequency = EditorGUILayout.IntSlider(_districtSettings.Frequency, 0, 10);
-
-        GUILayout.Label("Size");
-        _districtSettings.Size = EditorGUILayout.Slider((float)_districtSettings.Size, 0.0f, 1.0f);
+        _districtSettings.Frequency = EditorGUILayout.IntSlider("Frequency",_districtSettings.Frequency, 0, 10);
+        _districtSettings.Size = EditorGUILayout.Slider("Size",(float)_districtSettings.Size, 0.0f, 1.0f);
 
 
         //define prefab settings
         GUI.SetNextControlName("Size");
-        GUILayout.Label("Prefab amount");
-        if (EditorGUILayout.IntField(_prefabAmount).KeyPressed("Size", KeyCode.Return, out _prefabAmount))
+        if (EditorGUILayout.IntField("Prefab Size",_prefabAmount).KeyPressed("Size", KeyCode.Return, out _prefabAmount))
         {
             Mathf.Clamp(_prefabAmount, 0, _prefabAmount + 1);
             _buildingPrefabs = Resize(_buildingPrefabs, _prefabAmount);
@@ -54,18 +51,21 @@ public class DistrictEditor
 
         if (!_foldoutObjects)
         {
+            EditorGUI.indentLevel--;
             return;
         }
 
         //allow editing of prefabs
         for (int i = 0; i < _buildingPrefabs.Count; i++)
         {
+            EditorGUI.indentLevel++;
             var prefab = _buildingPrefabs[i];
             string name = "Prefab " + (i + 1) + ":";
             _buildingPrefabs[i] = (GameObject) EditorGUILayout.ObjectField(name, prefab, typeof (GameObject), true);
+            EditorGUI.indentLevel--;
         }
+        EditorGUI.indentLevel--;
 
-        
     }
 
 
@@ -98,5 +98,16 @@ public class DistrictEditor
     public DistrictSettings GetSettings()
     {
         return _districtSettings;
+    }
+
+    public void AddPrefab(string path)
+    {
+        GameObject obj = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+       _buildingPrefabs.Add(obj);
+    }
+
+    public void ResetPrefabs()
+    {
+        _buildingPrefabs.Clear();
     }
 }

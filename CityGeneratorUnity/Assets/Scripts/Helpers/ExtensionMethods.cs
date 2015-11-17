@@ -113,4 +113,46 @@ public static class TownBuilder
 
         return mesh;
     }
+
+    public static Mesh CreateRoadMesh(Line line, GameObject parent, float width)
+    {
+        var halfWidth = width / 2;
+        var y = parent.transform.position.y + 7;
+
+        var p1X = (float)line.Point1.X;
+        var p1Y = (float)line.Point1.Y;
+
+        var p2X = (float)line.Point2.X;
+        var p2Y = (float)line.Point2.Y;
+
+        var verticesTemp = new Vector3[4]
+        {
+            new Vector3(p1X + halfWidth, y, p1Y + halfWidth),
+            new Vector3(p1X - halfWidth, y, p1Y - halfWidth),
+            new Vector3(p2X - halfWidth, y, p2Y - halfWidth),
+            new Vector3(p2X + halfWidth, y, p2Y + halfWidth)
+        };
+
+        //normals
+        var normalsTemp = new Vector3[4];
+        for (int i = 0; i < 4; ++i)
+        {
+            normalsTemp[i] = Vector3.up;
+        }
+
+        //indices
+        var indices = new int[] { 0, 1, 2, 0, 2, 3 };
+
+        //Create Mesh
+        Mesh mesh = new Mesh
+        {
+            name = "Plane",
+            vertices = verticesTemp,
+            normals = normalsTemp,
+            triangles = indices
+        };
+
+
+        return mesh;
+    }
 }

@@ -227,7 +227,7 @@ namespace CityGeneratorWPF.Service
             };
 
             polygon.Stroke = (bBorder)? new SolidColorBrush(Colors.Red) : new SolidColorBrush(c);
-            
+
             //Create a point list for the polygon
             var pc = new PointCollection();
             foreach (var point in cell.Points)
@@ -236,6 +236,11 @@ namespace CityGeneratorWPF.Service
 
             //Draw
             _drawCanvas.Children.Add(polygon);
+
+            foreach (var edge in cell.Edges)
+            {
+                // DrawLine(edge,Colors.Red,2);
+            }
         }
 
         public void DrawText(string text, Color c, Point position)
@@ -254,34 +259,26 @@ namespace CityGeneratorWPF.Service
             _drawCanvas.Children.Add(textBlock);
         }
 
-        public void DrawDistrict(District district, Color c)
+        public void DrawDistrict(District district, Color c, bool bDrawRoads, bool bDrawCells)
         {
+            //Fill the cells 
             foreach (var cell in district.Cells)
             {
+                if(bDrawCells)
+                     DrawCell(cell.Cell, c.GetRandomColorOffset(0.07));
 
-                DrawCell(cell.Cell, c.GetRandomColorOffset(0.07));
-            };
-
-            foreach (var cell in district.Cells)
-            {
-
-                foreach (var buildSite in cell.BuildSites)
+                if (bDrawRoads && cell.Road != null)
                 {
-                    DrawPoint(buildSite, 5, Colors.DarkRed);
+                    DrawRoad(cell.Road,Colors.Red,Colors.OrangeRed,Colors.Aqua,false);
                 }
-
-
-
             };
-
-           
         }
 
         public void DrawRoad(Road road, Color linecolor, Color startColor, Color endColor, bool drawStartEnd = true)
         {
             foreach (var line in road.Lines)
             {
-                DrawLine(line,linecolor,4);
+                DrawLine(line,linecolor,1);
             }
 
             if(!drawStartEnd)

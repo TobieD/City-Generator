@@ -1,0 +1,59 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<Settings>
+  <Generation>
+    <UseSeed>false</UseSeed>
+    <Seed>0</Seed>
+    <Width>3000</Width>
+    <Length>3000</Length>
+    <StartX>0</StartX>
+    <StartY>0</StartY>
+    <Amount>500</Amount>
+    <Point>0</Point>
+    <Voronoi>1</Voronoi>
+    <Parent></Parent>
+  </Generation>
+  <Districts>
+    <Grass>
+      <Frequency>3</Frequency>
+      <Size>0.42899999022483826</Size>
+      <Buildings>
+        <Building ID="0">Assets/Resources/Mesh/Living/L_Lamp.FBX</Building>
+        <Building ID="1">Assets/Resources/Mesh/Living/L_Building_03.FBX</Building>
+        <Building ID="2">Assets/Resources/Mesh/Living/L_Building_01.FBX</Building>
+        <Building ID="3">Assets/Resources/Mesh/Living/L_Tree_01.FBX</Building>
+        <Building ID="4">Assets/Resources/Mesh/Living/L_Tree_02.FBX</Building>
+      </Buildings>
+    </Grass>
+    <Urban>
+      <Frequency>1</Frequency>
+      <Size>0.57099997997283936</Size>
+      <Buildings>
+        <Building ID="0">Assets/Resources/Mesh/Living/L_Building_03.FBX</Building>
+        <Building ID="1">Assets/Resources/Mesh/Suburbs/S_Building_02.FBX</Building>
+        <Building ID="2">Assets/Resources/Mesh/Suburbs/S_Building_03.FBX</Building>
+        <Building ID="3">Assets/Resources/Mesh/Living/L_Tree_01.FBX</Building>
+        <Building ID="4">Assets/Resources/Mesh/Living/L_Tree_02.FBX</Building>
+      </Buildings>
+    </Urban>
+    <Factory>
+      <Frequency>3</Frequency>
+      <Size>0.30899998545646667</Size>
+      <Buildings>
+        <Building ID="0">Assets/Resources/Mesh/Financial/F_Building_03.FBX</Building>
+        <Building ID="1">Assets/Resources/Mesh/Financial/F_Building_02.FBX</Building>
+        <Building ID="2">Assets/Resources/Mesh/Financial/F_Building_01.FBX</Building>
+        <Building ID="3">Assets/Resources/Mesh/Financial/F_Building_04.FBX</Building>
+      </Buildings>
+    </Factory>
+  </Districts>
+  <Road>
+    <Amount>7</Amount>
+    <Max>75</Max>
+    <Branches>3</Branches>
+  </Road>
+  <River>
+    <Amount>1</Amount>
+    <Max>7</Max>
+    <Branches>1</Branches>
+  </River>
+</Settings>

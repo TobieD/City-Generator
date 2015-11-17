@@ -31,11 +31,11 @@
         <Canvas x:Name="cDrawCanvas" ClipToBounds="True" Grid.Row="1" Grid.Column="0" Grid.RowSpan="2" Background="#FFFFFF" />
 
 
-        <TabControl Grid.Row="1" Grid.Column="1" Grid.RowSpan="2">
+        <TabControl Grid.Row="1" Grid.RowSpan="2" Grid.ColumnSpan="2" Margin="1512,0,0,0">
             <TabItem Header="Voronoi">
                 <StackPanel Orientation="Vertical" Background="#FFFFFF">
                     <Label Margin="5,0,0,0" Content="Generation Settings" FontWeight="Bold"/>
-                    
+
                     <!--Seed-->
                     <Grid Margin="5,0,0,0">
                         <Grid.ColumnDefinitions>
@@ -45,7 +45,7 @@
                         <Label Content="Use Seed" Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="114"/>
                         <CheckBox Grid.Column="1" IsChecked="{Binding Main.UseSeed}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Grid>
-                    
+
                     <Grid Margin="5,0,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="49*"/>
@@ -68,7 +68,7 @@
                         <Label Grid.Column="2" Content="Start Y" />
                         <TextBox Grid.Column="3" Margin="5" Text="{Binding Main.StartY}"/>
                     </Grid>
-                    
+
                     <Grid Margin="5,0,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="1*"/>
@@ -110,7 +110,7 @@
                         <Label Content="Algorithm" Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="110"/>
                         <ComboBox Grid.Column="1" Margin="5" SelectedItem="{Binding Main.VoronoiAlgorithm}" ItemsSource="{Binding Main.PossibleAlgorithms}"/>
                     </Grid>
-                    
+
                     <Label Margin="5,0,0,0" Content="Visualize Settings" FontWeight="Bold" />
 
                     <!--Radius-->
@@ -208,34 +208,75 @@
                         <TextBox Text="{Binding Main.NewType}" Width="100" Margin="5"/>
                         <Button Content="+" Command="{Binding Main.AddSettingsCommand}" CommandParameter="{Binding Main.NewType}" Width ="20" Margin="5"/>
                         <Button Content="-" Command="{Binding Main.RemoveSettingsCommand}" CommandParameter="{Binding Main.NewType}" Width ="20" Margin="5"/>
-                        
+
                     </StackPanel>
-                    
+
                     <Expander Header="District Settings">
-                    <ListView ItemsSource="{Binding Main.DistrictSettings}">
-                        <ListView.ItemTemplate>
-                            <DataTemplate>
-                                <StackPanel Orientation="Vertical">
+                        <ListView ItemsSource="{Binding Main.DistrictSettings}">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Vertical">
                                         <StackPanel Orientation="Horizontal">
                                             <Label Content="Type: "/>
-                                        <Label Content="{Binding Type}"/>
-                                    </StackPanel>
+                                            <Label Content="{Binding Type}"/>
+                                        </StackPanel>
 
-                                    <StackPanel Orientation="Horizontal">
-                                        <Label Content="Size: "/>
-                                        <Slider Width="100" Value="{Binding Size}" Maximum="1" Minimum="0" LargeChange="0.1"/>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Label Content="Size: "/>
+                                            <Slider Width="100" Value="{Binding Size}" Maximum="1" Minimum="0" LargeChange="0.1"/>
                                         </StackPanel>
 
                                         <StackPanel Orientation="Horizontal">
                                             <Label Content="Frequency: "/>
                                             <Slider Width="100" Value="{Binding Frequency}" Maximum="10" Minimum="1"/>
-                                            </StackPanel>
+                                        </StackPanel>
 
-                                </StackPanel>
-                            </DataTemplate>
-                        </ListView.ItemTemplate>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
 
-                    </ListView>
+                        </ListView>
+                    </Expander>
+
+                    <Grid Margin="5,0,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="7*"/>
+                            <ColumnDefinition Width="13*"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Content="Road Generation" Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="110"/>
+                        <ComboBox Grid.Column="1" Margin="5" SelectedItem="{Binding Main.RoadGenMethod}" ItemsSource="{Binding Main.PossibleRoadGenMethods}"/>
+                    </Grid>
+
+                    <Expander Header="Road/River Settings">
+                        <ListView ItemsSource="{Binding Main.RoadRiverSettings}">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Vertical">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Label Content="Type: "/>
+                                            <Label Content="{Binding Type}"/>
+                                        </StackPanel>
+
+                                        <StackPanel Orientation="Horizontal">
+                                            <Label Content="Amount: "/>
+                                            <Slider Width="100" Value="{Binding Amount}" Maximum="15" Minimum="0" LargeChange="1"/>
+                                        </StackPanel>
+
+                                        <StackPanel Orientation="Horizontal">
+                                            <Label Content="Branches: "/>
+                                            <Slider Width="100" Value="{Binding Branches}" Maximum="15" Minimum="0"/>
+                                        </StackPanel>
+
+                                        <StackPanel Orientation="Horizontal">
+                                            <Label Content="Max: "/>
+                                            <Slider Width="100" Value="{Binding Max}" Maximum="75" Minimum="1"/>
+                                        </StackPanel>
+
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+
+                        </ListView>
                     </Expander>
 
                     <Label Margin="5,0,0,0" Content="Visualize" FontWeight="Bold"/>
@@ -258,20 +299,30 @@
                         <CheckBox Grid.Column="1" IsChecked="{Binding Main.DrawRoads}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Grid>
 
+                    <Grid Margin="5,0,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="23*"/>
+                            <ColumnDefinition Width="17*"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Content="Draw Rivers" Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="114"/>
+                        <CheckBox Grid.Column="1" IsChecked="{Binding Main.DrawRivers}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
+
 
                     <Label Margin="5,0,0,0" Content="Generate" FontWeight="Bold"/>
-                    <Button Margin="5,2" Content="Generate Districts" Command="{Binding Main.GenerateCityCommand}" />
-                    
+                    <Button Margin="5,2" Content="Generate City" Command="{Binding Main.GenerateCityCommand}" />
+                    <Button Margin="5,2" Content="Redraw City" Command="{Binding Main.RedrawCityCommand}" />
+
                 </StackPanel>
 
             </TabItem>
         </TabControl>
-        
-        
+
+
         <!-- Generate Info -->
         <StackPanel Grid.Row="2" Grid.Column="0" Orientation="Horizontal" Background="#FFC8C8C8">
 
-            
+
             <Label Content="{Binding Main.GenerationTimeText}"/>
         </StackPanel>
 

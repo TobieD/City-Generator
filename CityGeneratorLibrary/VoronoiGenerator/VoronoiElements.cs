@@ -253,14 +253,18 @@ namespace Voronoi
         /// /// </summary>
         public Point SitePoint;
 
+        public List<Line> Edges; 
+
         public Cell()
         {
             Points = new List<Point>();
+            Edges = new List<Line>();
         }
 
         public Cell(IEnumerable<Point> points)
         {
             Points = new List<Point>();
+            Edges = new List<Line>();
 
             foreach (var point in points)
             {
@@ -282,8 +286,9 @@ namespace Voronoi
 
         public void AddLine(Line l)
         {
-            Points.Add(l.Point1);
-            Points.Add(l.Point2);
+            Edges.Add(l);
+            //Points.Add(l.Point1);
+            //Points.Add(l.Point2);
         }
     }
 
