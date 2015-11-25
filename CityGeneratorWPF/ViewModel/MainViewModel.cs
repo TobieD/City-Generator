@@ -89,7 +89,7 @@ namespace CityGeneratorWPF.ViewModel
         /// <summary>
         /// Amount of points to generate
         /// </summary>
-        private int _pointsToGenerate = 750;
+        private int _pointsToGenerate = 250;
 
         public int PointsToGenerate
         {
@@ -97,6 +97,18 @@ namespace CityGeneratorWPF.ViewModel
             set
             {
                 _pointsToGenerate = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        private int _radius = 350;
+
+        public int Radius
+        {
+            get { return _radius; }
+            set
+            {
+                _radius = value;
                 RaisePropertyChanged();
             }
         }
@@ -125,9 +137,9 @@ namespace CityGeneratorWPF.ViewModel
         /// <summary>
         /// Settings of the bounds in which the points will be spawned
         /// </summary>
-        public int Width { get; set; } = 1400;
+        public int Width { get; set; } = 1600;
 
-        public int Height { get; set; } = 700;
+        public int Height { get; set; } = 900;
 
         public int StartX { get; set; } = 50;
 
@@ -289,11 +301,6 @@ namespace CityGeneratorWPF.ViewModel
 
         #endregion
 
-
-
-
-
-
         /// <summary>
         /// Initialize this viewModel
         /// </summary>
@@ -318,6 +325,7 @@ namespace CityGeneratorWPF.ViewModel
             foreach (var districtType in _districtTypes)
             {
                 DistrictSettings.Add(new DistrictSettings(districtType));
+                break;
             }
 
             RaisePropertyChanged("DistrictSettings");
@@ -351,7 +359,9 @@ namespace CityGeneratorWPF.ViewModel
                 StartY = StartY,
                 UseSeed = UseSeed,
                 Seed = Seed,
-                Amount = PointsToGenerate
+                Amount = PointsToGenerate,
+                CircleRadius = Radius
+               
             };
 
             //generate points
@@ -379,8 +389,10 @@ namespace CityGeneratorWPF.ViewModel
             //check if there are enough points
             if (_points == null || _points.Count <= 2 || _voronoiDiagram.Triangulation == null)
             {
+
                 Console.WriteLine("No points available!");
-                return;
+                GeneratePoints(PointsToGenerate);
+                //return;
             }
 
             _baseColor = Extensions.Extensions.RandomColor();
@@ -410,10 +422,11 @@ namespace CityGeneratorWPF.ViewModel
         {
             if (_voronoiDiagram == null)
             {
+                //GenerateVoronoi();
                 return;
             }
 
-
+            //Settings for generation
             _citySettings.DistrictSettings = DistrictSettings.ToList();
             _citySettings.RoadSettings = RoadRiverSettings[0];
             _citySettings.RiverSettings = RoadRiverSettings[1];
@@ -501,8 +514,8 @@ namespace CityGeneratorWPF.ViewModel
 
                         if (ShowPointInfo == true)
                         {
-                            _drawService.DrawText(l.Point1.ToString(), lineColor, l.Point1);
-                            _drawService.DrawText(l.Point2.ToString(), lineColor, l.Point2);
+                            _drawService.DrawText(l.Start.ToString(), lineColor, l.Start);
+                            _drawService.DrawText(l.End.ToString(), lineColor, l.End);
                         }
                     }
                 }

@@ -13,8 +13,8 @@
             <RowDefinition Height="25"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition/>
-            <ColumnDefinition Width="185"/>
+            <ColumnDefinition Width="9*"/>
+            <ColumnDefinition Width="1*"/>
         </Grid.ColumnDefinitions>
 
         <!-- Top Dock -->
@@ -28,10 +28,10 @@
         </DockPanel>
 
         <!-- Drawing -->
-        <Canvas x:Name="cDrawCanvas" ClipToBounds="True" Grid.Row="1" Grid.Column="0" Grid.RowSpan="2" Background="#FFFFFF" />
+        <Canvas MinWidth="700" x:Name="cDrawCanvas" ClipToBounds="True" Grid.Row="1" Grid.Column="0" Grid.RowSpan="2" Background="#FFFFFF" />
 
 
-        <TabControl Grid.Row="1" Grid.RowSpan="2" Grid.ColumnSpan="2" Margin="1512,0,0,0">
+        <TabControl Grid.Row="1" Grid.RowSpan="2" Margin="1,0,-1,0" Grid.Column="1">
             <TabItem Header="Voronoi">
                 <StackPanel Orientation="Vertical" Background="#FFFFFF">
                     <Label Margin="5,0,0,0" Content="Generation Settings" FontWeight="Bold"/>
@@ -82,6 +82,15 @@
                         <TextBox Grid.Column="3" Margin="5" Text="{Binding Main.Height}"/>
                     </Grid>
 
+                    <Grid Margin="5,0,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="2*"/>
+                            <ColumnDefinition Width="1*"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Content="Circle Radius" Grid.ColumnSpan="1"/>
+                        <TextBox Grid.Column="1" Margin="5" Text="{Binding Main.Radius}"/>
+                    </Grid>
+                    
                     <!--Amount-->
                     <Grid Margin="5,0,0,0">
                         <Grid.ColumnDefinitions>
@@ -231,21 +240,22 @@
                                             <Slider Width="100" Value="{Binding Frequency}" Maximum="10" Minimum="1"/>
                                         </StackPanel>
 
+                                        <StackPanel Orientation="Horizontal">
+                                            <Label Content="Offset: "/>
+                                            <Slider Maximum="100" Minimum="1" Width="100" Value="{Binding Offset}"/>
+                                        </StackPanel>
+
+                                        <StackPanel Orientation="Horizontal">
+                                            <Label Content="Interval: "/>
+                                            <Slider Maximum="100" Minimum="1" Width="100" Value="{Binding Percentage}"/>
+                                        </StackPanel>
+
                                     </StackPanel>
                                 </DataTemplate>
                             </ListView.ItemTemplate>
 
                         </ListView>
                     </Expander>
-
-                    <Grid Margin="5,0,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="7*"/>
-                            <ColumnDefinition Width="13*"/>
-                        </Grid.ColumnDefinitions>
-                        <Label Content="Road Generation" Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="110"/>
-                        <ComboBox Grid.Column="1" Margin="5" SelectedItem="{Binding Main.RoadGenMethod}" ItemsSource="{Binding Main.PossibleRoadGenMethods}"/>
-                    </Grid>
 
                     <Expander Header="Road/River Settings">
                         <ListView ItemsSource="{Binding Main.RoadRiverSettings}">

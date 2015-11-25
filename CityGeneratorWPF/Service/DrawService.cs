@@ -5,6 +5,7 @@ using System.Windows.Media;
 using System.Windows.Shapes;
 using CityGenerator;
 using CityGeneratorWPF.Extensions;
+using Helpers;
 using Voronoi;
 using Line = System.Windows.Shapes.Line;
 using Point = Voronoi.Point;
@@ -112,7 +113,7 @@ namespace CityGeneratorWPF.Service
 
         public void DrawLine(Voronoi.Line line, Color c,int thick = 1)
         {
-            DrawLine(line.Point1,line.Point2,c,thick);
+            DrawLine(line.Start,line.End,c,thick);
         }
 
         /// <summary>
@@ -232,15 +233,13 @@ namespace CityGeneratorWPF.Service
             var pc = new PointCollection();
             foreach (var point in cell.Points)
                 pc.Add(new System.Windows.Point(point.X, point.Y));
+
             polygon.Points = pc;
 
             //Draw
             _drawCanvas.Children.Add(polygon);
 
-            foreach (var edge in cell.Edges)
-            {
-                // DrawLine(edge,Colors.Red,2);
-            }
+          
         }
 
         public void DrawText(string text, Color c, Point position)
@@ -266,19 +265,63 @@ namespace CityGeneratorWPF.Service
             {
                 if(bDrawCells)
                      DrawCell(cell.Cell, c.GetRandomColorOffset(0.07));
+                else
+                {
+                    var cellColor = Color.FromRgb(200, 200, 200);
+                    //DrawCell(cell.Cell, cellColor);
+                }
 
                 if (bDrawRoads && cell.Road != null)
                 {
-                    DrawRoad(cell.Road,Colors.Red,Colors.OrangeRed,Colors.Aqua,false);
+                    var roadColor = Color.FromRgb(75,75,75);
+                    //roadColor = Colors.OrangeRed;
+
+                    DrawRoad(cell.Road,roadColor,Colors.Red,Colors.Aqua,false);
+                }
+
+                foreach (var p in cell.BuildSites)
+                {
+                    var pc = Color.FromRgb(50, 50, 50);
+                    DrawPoint(p,4,pc);
                 }
             };
         }
 
-        public void DrawRoad(Road road, Color linecolor, Color startColor, Color endColor, bool drawStartEnd = true)
+        public void DrawRoad(Road road, Color linecolor, Color startColor, Color endColor, bool drawStartEnd = true, int width = 1)
         {
             foreach (var line in road.Lines)
             {
-                DrawLine(line,linecolor,1);
+                //linecolor = Colors.OrangeRed.GetRandomColorOffset(0.07);
+
+
+                //width = line.Intersected ? width + 1 : width;
+                DrawLine(line,linecolor, width);
+
+                continue;
+
+                //intersection debug
+                #region intersection Debug  
+                if (line.Left != null)
+                {
+                    DrawPoint(line.Left, 10, linecolor); //original end point
+                    DrawPoint(line.Left,5, Colors.Green); //original end point
+                    
+                }
+
+                if (line.Right != null)
+                {
+                    DrawPoint(line.Right, 10, linecolor); //original start point
+                    DrawPoint(line.Right, 5, Colors.DarkRed); //original start point
+
+                }
+
+
+                if (line.Intersect != null)
+                {
+                    DrawPoint(line.Intersect, 7, endColor); //point of intersection
+                }
+                #endregion
+
             }
 
             if(!drawStartEnd)

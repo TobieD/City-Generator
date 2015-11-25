@@ -116,7 +116,11 @@ public class TownGeneratorWindow : EditorWindow
         //Create TownGenerator if there isn't one
         Initialize();
 
+
+
         ImportExportSettings();
+
+        _citySettings.DebugMode = EditorGUILayout.Toggle("Debug Mode", _citySettings.DebugMode);
 
         //Draw Generation settings
         GenerationSettings();
@@ -347,10 +351,10 @@ public class TownGeneratorWindow : EditorWindow
             //Small
             case CityType.Village:
                 {
-                    genSettings.Width = 1000;
-                    genSettings.Length = 1000;
+                    genSettings.Width = 7500;
+                    genSettings.Length = 7500;
                     genSettings.PointAlgorithm = PointGenerationAlgorithm.Simple;
-                    genSettings.Amount = 1500;
+                    genSettings.Amount = 2500;
 
                     break;
                 }
@@ -358,19 +362,19 @@ public class TownGeneratorWindow : EditorWindow
                 //medium
             case CityType.Town:
                 {
-                    genSettings.Width = 2500;
-                    genSettings.Length = 2500;
+                    genSettings.Width = 10000;
+                    genSettings.Length = 10000;
                     genSettings.PointAlgorithm = PointGenerationAlgorithm.CityLike;
-                    genSettings.Amount = 4000;
+                    genSettings.Amount = 8000;
                     break;
                 }
             //large
             case CityType.Metropolis:
                 {
-                    genSettings.Width = 5000;
-                    genSettings.Length = 5000;
+                    genSettings.Width = 20000;
+                    genSettings.Length = 20000;
                     genSettings.PointAlgorithm = PointGenerationAlgorithm.CityLike;
-                    genSettings.Amount = 10000;
+                    genSettings.Amount = 16000;
                     break;
                 }
             default:

@@ -50,10 +50,14 @@ public class TownZone : MonoBehaviour
             DestroyImmediate(_zoneObject);
         }
 
+        foreach (var bgo in _buildings)
+        {
+            DestroyImmediate(bgo);
+        }
+
         GenerateRoads();
 
-
-        //GenerateBuildings();
+        GenerateBuildings();
     }
 
     private void DrawBounds()
@@ -117,12 +121,31 @@ public class TownZone : MonoBehaviour
 
     }
 
+    private void GenerateBuildings()
+    {
+        //load prefabs for the type
+        var prefabs = GetPrefabsForType(ZoneType);
+
+        if (prefabs.Count < 1)
+        {
+            Debug.LogWarningFormat("No prefab buildings set for {0}!\nPlease add building prefabs.",_cell.DistrictType);
+            return;
+        }
+
+        //Create new random building
+        for (int i = 0; i < _cell.BuildSites.Count; i++)
+        {
+            GenerateBuilding(prefabs.GetRandomValue(), String.Format("Building_{0}", i + 1),_cell.BuildSites[i].ToVector3());
+        }
+
+    }
+
     private void GenerateRoad(Line line, string name)
     {
-        var start = line.Point1.ToVector3();
-        var end = line.Point2.ToVector3();
+        var start = line.Start.ToVector3();
+        var end = line.End.ToVector3();
         var length = Vector3.Distance(start, end);
-        var width = 2.0f;
+        var width = TownGenerator.GetInstance()._citySettings.RoadSettings.Width;
 
         if (length < 1)
         {
@@ -131,10 +154,13 @@ public class TownZone : MonoBehaviour
 
         //create road game object
         var road = new GameObject(name);
-        road.transform.position = start + new Vector3(0, 0.05f, 0);
+        road.tag = "Road";
+        road.transform.position = start + new Vector3(0, 0, 0);
         road.transform.parent = transform;
         road.transform.rotation = Quaternion.FromToRotation(Vector3.right, end - start);
 
+
+        _buildings.Add(road);
 
         //Create mesh
         #region Mesh Creation
@@ -170,14 +196,13 @@ public class TownZone : MonoBehaviour
         //create mesh
         Mesh mesh = new Mesh
         {
-            
             vertices = vertices,
             triangles = triangles,
             normals = normals,
-            uv = uv
+            uv = uv,
+            name = "road"
         };
 
-        mesh.name = "road";
 
         #endregion
 
@@ -185,48 +210,24 @@ public class TownZone : MonoBehaviour
         filter.mesh = mesh;
 
         var renderer = road.AddComponent<MeshRenderer>();
+
+        renderer.material = Resources.Load<Material>("Material/road");
         var collider = road.AddComponent<MeshCollider>();
-
-    }
-
-    private void GenerateBuildings()
-    {
-        //load prefabs for the type
-        var prefabs = GetPrefabsForType(ZoneType);
-
-        if (prefabs.Count < 1)
-        {
-            Debug.LogWarningFormat("No prefab buildings set for {0}!\nPlease add building prefabs.",_cell.DistrictType);
-            return;
-        }
-
-        //remove previous buildings
-        foreach (var building in _buildings)
-        {
-            DestroyImmediate(building);
-        }
-
-        //Create new random building
-        for (int i = 0; i < _cell.BuildSites.Count; i++)
-        {
-            GenerateBuilding(prefabs.GetRandomValue(), String.Format("Building_{0}", i + 1),_cell.BuildSites[i].ToVector3());
-        }
 
     }
 
     private void GenerateBuilding(GameObject prefab, string name, Vector3 position)
     {
-        var randomScale = Random.Range(0.7f, 1.2f);
+        var randomScale = Random.Range(0.4f, 1.4f);
 
-        randomScale = 0.2f;
+        randomScale = 1.0f;
         var randomRot = Random.rotation;
-        randomRot.x = -90.0f;
-        randomRot.y = 0;
 
         var buildingObject = (GameObject)GameObject.Instantiate(prefab, position, prefab.transform.rotation);
 
         buildingObject.GetComponent<MeshRenderer>().material = Resources.Load < Material>("Material/Buildings_Default");
         buildingObject.transform.localScale = new Vector3(randomScale,randomScale,randomScale);
+        buildingObject.transform.Rotate(prefab.transform.rotation.x, randomRot.y, randomRot.z);
 
         buildingObject.transform.parent = transform;
         buildingObject.isStatic = false;

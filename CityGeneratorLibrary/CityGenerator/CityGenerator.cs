@@ -19,8 +19,10 @@ namespace CityGenerator
 
         public RoadGenMethod RoadGenMethod = RoadGenMethod.Grid;
 
-        public RoadSettings RoadSettings = new RoadSettings(75,3, 1,"Road");
+        public RoadSettings RoadSettings = new RoadSettings(75,1, 1,"Road");
         public RoadSettings RiverSettings = new RoadSettings(7,1, 1,"River");
+
+        public bool DebugMode = true;
     }
 
     public class DistrictSettings
@@ -33,7 +35,13 @@ namespace CityGenerator
         public double Size { get; set; } = 0.5;
 
         //how many times a district of this type will be generated
-        public int Frequency { get; set; } = 2; 
+        public int Frequency { get; set; } = 2;
+
+        public int AmountOfBuildpoints { get; set; } = 8;
+
+        public int Offset { get; set; } = 5;
+
+        public double Percentage { get; set; }= 10;
 
         public DistrictSettings(string type)
         {
@@ -53,12 +61,15 @@ namespace CityGenerator
 
         public string Type { get; private set; }
 
-        public RoadSettings(int max, int branches, int amount,string type)
+        public int Width { get; set; }
+
+        public RoadSettings(int max, int branches, int amount,string type, int width = 10)
         {
             Amount = amount;
             Max = max;
             Branches = branches;
             Type = type;
+            Width = width;
         }
     }
 
@@ -71,6 +82,11 @@ namespace CityGenerator
 
         public static CityData GenerateCity(CitySettings settings, VoronoiDiagram voronoi)
         {
+
+            if (voronoi.VoronoiCells.Count < 1)
+                return null;
+
+
             //Create helpers if none are created.
             if (_districtBuilder == null)
             {

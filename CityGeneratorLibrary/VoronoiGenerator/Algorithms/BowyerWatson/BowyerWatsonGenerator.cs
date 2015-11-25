@@ -97,7 +97,7 @@ namespace Voronoi.Algorithms
                 //3.4 Generate new counterclockwise oriented triangles filling the hole in the existing triangulation
                 foreach (var line in edges)
                 {
-                    var t = new Triangle(line.Point1, line.Point2, point);
+                    var t = new Triangle(line.Start, line.End, point);
                     triangles.Add(t);
                 }
 
@@ -147,11 +147,14 @@ namespace Voronoi.Algorithms
             
             foreach (var line in lines)
             {
-                cells[line.Left].AddPoint(line.Point1);
-                cells[line.Left].AddPoint(line.Point2);
 
-                cells[line.Right].AddPoint(line.Point1);
-                cells[line.Right].AddPoint(line.Point2);
+                cells[line.Left].AddPoint(line.Start);
+                cells[line.Left].AddPoint(line.End);
+                cells[line.Left].AddLine(line);
+
+                cells[line.Right].AddPoint(line.Start);
+                cells[line.Right].AddPoint(line.End);
+                cells[line.Right].AddLine(line);
             }
 
             _voronoi.SiteCellPoints = cells;
@@ -188,8 +191,8 @@ namespace Voronoi.Algorithms
 
                     var line = new Line(circumT1, circumT2)
                     {
-                        Left = sharedLine.Point1,
-                        Right = sharedLine.Point2
+                        Left = sharedLine.Start,
+                        Right = sharedLine.End
                     };
 
                     lines.Add(line);

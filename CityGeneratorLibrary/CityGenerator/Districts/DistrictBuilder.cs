@@ -17,6 +17,9 @@ namespace CityGenerator
         private BowyerWatsonGenerator _triangulator = new BowyerWatsonGenerator();
         private RoadBuilder _roadBuilder = new RoadBuilder();
 
+        private RoadSettings _roadSettings;
+
+        private bool bEnableDebugMode = false;
 
         public List<District> CreateCityDistricts(CitySettings settings,VoronoiDiagram voronoi)
         {
@@ -33,39 +36,60 @@ namespace CityGenerator
         private District CreateDistrict(DistrictSettings settings)
         {
             var district = new District {DistrictType = settings.Type };
+            var buildpoints = new List<Point>();
 
             //find all cells with the corresponding district type
             foreach (var dc in _districtCells)
             {
                 if (dc.DistrictType == district.DistrictType)
                 {
+                    //generate a road inside the district cell
+                    dc.Road = _roadBuilder.BuildRoad(_roadSettings, dc);
+
+                    dc.Road.Lines.SortBySmallestLength();
+
+                    //Generate build sites near the generated roads starting from the smallest line
+                    var percentage = settings.Percentage/100;
+
+                    //the first entry is always the shortest
+                    var shortest = dc.Road.Lines[0];
+                    var p = shortest.FindRandomPointOnLine(percentage, percentage);
+
+                    //make sure the distance between building points is always equal to this
+                    var uniformDistanceBetweenPoints = MathHelpers.DistanceBetweenPoints(shortest.Start, p);
+
+                    foreach (var l in dc.Road.Lines)
+                    {
+                        var length = l.Length();
+
+                        var pc = uniformDistanceBetweenPoints / length;
+
+                        dc.BuildSites.AddRange(l.GeneratePointsNearLine(pc, settings.Offset));
+
+                    }
+
+                    buildpoints.AddRange(dc.BuildSites);
                     district.Cells.Add(dc);
                 }
+
+                //Only create one cell
+                if(bEnableDebugMode)
+                    break;
             }
+
+            //filter out build sites that are too close together
 
             return district;
         }
 
         private List<DistrictCell> GenerateDistrictCells(CitySettings settings, VoronoiDiagram voronoi)
         {
-            var districtCells = new List<DistrictCell>();
-
-            var build = false;
+            _roadSettings = settings.RoadSettings;
+            bEnableDebugMode = settings.DebugMode;
 
             //Create a district cell from the voronoi cells
-            foreach (var cell in voronoi.GetCellsInBounds())
-            {
-                var dc = new DistrictCell(settings.DistrictSettings[0].Type, cell);
-
-                //generate a road inside the district cell
-                if (!build)
-                {
-                    //build = true;
-                    dc.Road = _roadBuilder.BuildRoad(settings.RoadSettings, cell);
-                }
-
-                districtCells.Add(dc);
-            }
+            var cells = voronoi.GetCellsInBounds();
+            var districtCells = cells.Select(cell => new DistrictCell(settings.DistrictSettings[0].Type, cell)).ToList();
 
             //tag random cells
             foreach (var setting in settings.DistrictSettings)

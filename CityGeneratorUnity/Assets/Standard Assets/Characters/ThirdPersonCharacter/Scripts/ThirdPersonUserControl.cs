@@ -1,4 +1,5 @@
 using System;
+using Helpers;
 using UnityEngine;
 
 namespace UnityStandardAssets.Characters.ThirdPerson
@@ -34,6 +35,11 @@ namespace UnityStandardAssets.Characters.ThirdPerson
 
             // get the third person character ( this should never be null due to require component )
             m_Character = GetComponent<ThirdPersonCharacter>();
+
+            //make the character spawn on a road
+            var road = GameObject.FindGameObjectsWithTag("Road").GetRandomValue().transform.position;
+
+            transform.position = road;
         }
 
 

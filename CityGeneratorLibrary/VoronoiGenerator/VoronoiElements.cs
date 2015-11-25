@@ -107,23 +107,26 @@ namespace Voronoi
     /// </summary>
     public class Line
     {
-        public Point Point1;
-        public Point Point2;
+        public Point Start;
+        public Point End;
 
 
         public Point Left;
         public Point Right;
+        public Point Intersect;
+
+        public bool Intersected = false;
 
         public Line(Point p1, Point p2)
         {
-            Point1 = p1;
-            Point2 = p2;
+            Start = p1;
+            End = p2;
         }
         #region Operator Overloading
 
         public override int GetHashCode()
         {
-            return this.Point1.GetHashCode() ^ this.Point2.GetHashCode();
+            return this.Start.GetHashCode() ^ this.End.GetHashCode();
         }
 
         public override bool Equals(object obj)
@@ -144,8 +147,8 @@ namespace Voronoi
             if ((((object) left) == null) || (((object) right) == null))
                 return false;
 
-            return ((left.Point1 == right.Point1 && left.Point2 == right.Point2) ||
-                   (left.Point1 == right.Point2 && left.Point2 == right.Point1));
+            return ((left.Start == right.Start && left.End == right.End) ||
+                   (left.Start == right.End && left.End == right.Start));
         }
 
         /// <summary>
@@ -158,19 +161,19 @@ namespace Voronoi
 
         public static bool operator >(Line left, Line right)
         {
-            return (left.Point1 > right.Point1 && left.Point2 > right.Point2);
+            return (left.Start > right.Start && left.End > right.End);
         }
 
         public static bool operator <(Line left, Line right)
         {
-            return (left.Point1 < right.Point1 && left.Point2 < right.Point2)
+            return (left.Start < right.Start && left.End < right.End)
             ;
         }
 
 
         public override string ToString()
         {
-            return $"Line: {Point1} - {Point2}";
+            return $"Line: {Start} - {End}";
         }
 
         #endregion

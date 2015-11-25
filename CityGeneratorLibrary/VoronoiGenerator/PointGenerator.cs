@@ -10,6 +10,8 @@ namespace Points
         
         Simple, //simple point generation
         CityLike, //generates additional points in the center of the generation plane
+        Uniform,
+        Circle
     }
 
 
@@ -40,6 +42,12 @@ namespace Points
                 case PointGenerationAlgorithm.CityLike:
                     generatedPoints = CityLikeSpread(settings);
                     break;
+                case PointGenerationAlgorithm.Uniform:
+                    generatedPoints = UniformDistribution(settings);
+                    break;
+                case PointGenerationAlgorithm.Circle:
+                    generatedPoints = CircleDistribution(settings);
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -48,23 +56,26 @@ namespace Points
 
             generatedPoints.FilterDoubleValues();
 
-            //Add Bounds as points
-            var bounds = new Point(startX, startY);
-            generatedPoints.Add(bounds);
-            generatedPoints.Add(new Point(bounds.X + width, bounds.Y));
-            generatedPoints.Add(new Point(bounds.X, bounds.Y +length));
-            generatedPoints.Add(new Point(bounds.X + width, bounds.Y + length));
+            if (settings.PointAlgorithm != PointGenerationAlgorithm.Circle)
+            {
+                //Add Bounds as points
+                var bounds = new Point(startX, startY);
+                generatedPoints.Add(bounds);
+                generatedPoints.Add(new Point(bounds.X + width, bounds.Y));
+                generatedPoints.Add(new Point(bounds.X, bounds.Y + length));
+                generatedPoints.Add(new Point(bounds.X + width, bounds.Y + length));
 
-            var halfWidth = width/2;
-            var halfLength = length/2;
+                var halfWidth = width/2;
+                var halfLength = length/2;
 
-            //Add half bounds as points
-            generatedPoints.Add(new Point(bounds.X + halfWidth, bounds.Y));
-            generatedPoints.Add(new Point(bounds.X + halfWidth, bounds.Y + length));
+                //Add half bounds as points
+                generatedPoints.Add(new Point(bounds.X + halfWidth, bounds.Y));
+                generatedPoints.Add(new Point(bounds.X + halfWidth, bounds.Y + length));
 
-            generatedPoints.Add(new Point(bounds.X, bounds.Y + halfLength));
-            generatedPoints.Add(new Point(bounds.X + width, bounds.Y + halfLength));
-           
+                generatedPoints.Add(new Point(bounds.X, bounds.Y + halfLength));
+                generatedPoints.Add(new Point(bounds.X + width, bounds.Y + halfLength));
+            }
+
 
             //restore back to original settings
             settings.StartX = startX;
@@ -130,6 +141,56 @@ namespace Points
             points.AddRange(SimpleSpread(settings));
 
 
+
+            return points;
+        }
+
+        private static List<Point> UniformDistribution(GenerationSettings settings)
+        {
+            var points = new List<Point>();
+
+            var width = settings.Width;
+            var length = settings.Length;
+
+            int gran = 20000;
+            int widthM = 0, lengthM = 0;
+
+            if (width > length)
+            {
+                lengthM = gran;
+                widthM = (int)Math.Floor(gran*width/length);
+            }
+            else
+            {
+                widthM = gran;
+                lengthM = (int)Math.Floor(gran * length / width);
+            }
+
+            for (int i = 0; i < settings.Amount; i++)
+            {
+                var p = Point.Zero;
+
+                p.X = width*RandomHelper.RandomInt((int)settings.StartX, widthM)/widthM;
+                p.Y = length * RandomHelper.RandomInt((int)settings.StartY, lengthM) / lengthM;
+
+                points.Add(p);
+            }
+
+
+            return points;
+        }
+
+        private static List<Point> CircleDistribution(GenerationSettings settings)
+        {
+            var points = new List<Point>();
+
+            for (int i = 0; i < settings.Amount; i++)
+            {
+                var origin = new Point(settings.Width/2, settings.Length/2);
+                var p = MathHelpers.GenerateRandomPointInCircle(origin, settings.CircleRadius);
+
+                points.Add(p);
+            }
 
             return points;
         }

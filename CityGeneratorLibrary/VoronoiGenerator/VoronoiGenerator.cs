@@ -30,6 +30,10 @@ namespace Voronoi
         // Amount of points to spawn
         public int Amount = 500;
 
+        public bool UseCircle = false;
+        public double CircleRadius = 25;
+
+
         // Algorithms to use
         public VoronoiAlgorithm VoronoiAlgorithm = VoronoiAlgorithm.BoywerWatson;
         public PointGenerationAlgorithm PointAlgorithm = PointGenerationAlgorithm.Simple;

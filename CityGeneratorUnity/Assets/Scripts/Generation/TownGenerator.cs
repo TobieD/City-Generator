@@ -12,8 +12,8 @@ using Object = UnityEngine.Object;
 public class TownGenerator:Singleton<TownGenerator>
 {
     //Settings
-    private GenerationSettings _generationSettings;
-    private CitySettings _citySettings;
+    public GenerationSettings _generationSettings;
+    public CitySettings _citySettings;
     private bool _bCanBuild = false;
 
     //Library generated data
@@ -53,7 +53,7 @@ public class TownGenerator:Singleton<TownGenerator>
         }
 
         //Generate terrain
-        _terrainGenerator.CreateTerrain(_generationSettings, Parent);
+       // _terrainGenerator.CreateTerrain(_generationSettings, Parent);
 
         //generate points + Voronoi
         GenerateVoronoiDiagram();
@@ -62,7 +62,6 @@ public class TownGenerator:Singleton<TownGenerator>
         GenerateCityData();
 
         CreateDistrictGameObjects();
-
 
         Debug.Log("CityGenerator: Generated Voronoi diagram! \nPress 'Build' to create a city.");
 
@@ -83,11 +82,7 @@ public class TownGenerator:Singleton<TownGenerator>
             zoneObject.GetComponent <TownZone>().Build();
         }
 
-        //_terrainGenerator.CreateRoads();
-
-
-       
-
+        
     }
 
     public void Clear()

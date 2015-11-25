@@ -30,6 +30,7 @@ public class RoadEditor
         Settings.Amount = EditorGUILayout.IntSlider("Amount",Settings.Amount, 0, 15);
         Settings.Branches = EditorGUILayout.IntSlider("Branches",Settings.Branches, 0, 10);
         Settings.Max = EditorGUILayout.IntSlider("Max",Settings.Max, 1, 75);
+        Settings.Width = EditorGUILayout.IntSlider("Width", Settings.Width, 1, 20);
         EditorGUI.indentLevel--;
 
 

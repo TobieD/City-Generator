@@ -119,11 +119,11 @@ public static class TownBuilder
         var halfWidth = width / 2;
         var y = parent.transform.position.y + 7;
 
-        var p1X = (float)line.Point1.X;
-        var p1Y = (float)line.Point1.Y;
+        var p1X = (float)line.Start.X;
+        var p1Y = (float)line.Start.Y;
 
-        var p2X = (float)line.Point2.X;
-        var p2Y = (float)line.Point2.Y;
+        var p2X = (float)line.End.X;
+        var p2Y = (float)line.End.Y;
 
         var verticesTemp = new Vector3[4]
         {

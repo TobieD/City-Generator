@@ -18,7 +18,7 @@ public class RoadComponent : MonoBehaviour
 	// Update is called once per frame
 	void Update ()
     {
-	    //Debug.DrawLine(_line.Point1.ToVector3(),_line.Point2.ToVector3());
+	    //Debug.DrawLine(_line.Start.ToVector3(),_line.End.ToVector3());
 	}
     
     public void SetRoadData(Line line)
@@ -50,11 +50,11 @@ public class RoadComponent : MonoBehaviour
         var halfWidth = roadWidth/2;
         var y = transform.position.y;
 
-        var p1X = (float)_line.Point1.X;
-        var p1Y = (float)_line.Point1.Y;
+        var p1X = (float)_line.Start.X;
+        var p1Y = (float)_line.Start.Y;
 
-        var p2X = (float)_line.Point2.X;
-        var p2Y = (float)_line.Point2.Y;
+        var p2X = (float)_line.End.X;
+        var p2Y = (float)_line.End.Y;
 
         var verticesTemp = new Vector3[4]
         {
