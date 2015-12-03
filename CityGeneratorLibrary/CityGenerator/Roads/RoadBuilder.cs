@@ -1,9 +1,9 @@
-﻿
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Helpers;
 using Voronoi;
+
+using SplitLine = System.Collections.Generic.KeyValuePair<Voronoi.Line, Voronoi.Line>;
 
 namespace CityGenerator
 {
@@ -13,132 +13,69 @@ namespace CityGenerator
         /// <summary>
         /// Build a road inside a district cell
         /// </summary>
-        public Road BuildRoad(RoadSettings roadSettings,DistrictCell cell)
+        public List<Road> BuildRoad(RoadSettings roadSettings,DistrictCell cell)
         {
-            //Create the road for the cell
-            var road = new Road();
-
             //Edges are the bounds of the road and will be part of the road as well
             var edges = cell.Cell.Edges.ToList();
 
             //find the longest line in the cell as a start line
             var longest = FindLongestLineInCell(edges);
-            var start = longest.Start;
-            var end = longest.End;
 
-            //Remove all edges from the cell that are smaller than 1/4th of the longest
-            //this avoids having multiple roads starting close together
-
-            var minLength = longest.Length()*0.25;
-            for(int i = 0; i < edges.Count; ++i)
-            {
-                
-                if (edges[i].Length() < minLength)
-                {
-                    edges.Remove(edges[i]);
-                }
-
-            }
-
-            //Create all the parts of the road
-            road.Lines.AddRange(GenerateRoad(null, edges, start, end, roadSettings.Branches));
-
+            //a cell edge can be shared so first remove the line from one of the shared cells
             //all edges of the cell are part of the road
+            var roads = new List<Road>();
             foreach (var edge in cell.Cell.Edges)
             {
                 //add the original side edge
-                //road.Lines.Add(edge);
-            } 
+                roads.Add(new Road(edge));
+            }
 
-            return road;
+
+            if (roadSettings.GenerateInnerRoads)
+            {
+                //Create all the parts of the road
+                roads.AddRange(GenerateRoad(roads, new Road(longest.Key), new Road(longest.Value), roadSettings.Branches));
+            }
+
+            return roads;
 
         }
         
         /// <summary>
         /// Keep generating roads until branches are zero
         /// </summary>
-        private List<Line> GenerateRoad(List<Line> lines, List<Line> cellEdges , Point start,Point end, int branches)
+        private List<Road> GenerateRoad(List<Road> roads , Road startLine ,Road endLine, int branches)
         {
-            //Create a new road if none exists
-            if (lines == null)
-            {
-                lines = new List<Line>();
-            }
+            //find a new start and end point
+            const double min = 0.33;
+            const double max = 1 - min;
+            var start = startLine.RoadLine.FindRandomPointOnLine(min, max);
+            var end = endLine.RoadLine.Center();
 
-            //Create the new line
-            var line = new Line(start, end);
-
-            //check for possible intersection, 
-            //if an intersection happens the end point becomes the point of intersection
-            foreach (var l in lines)
-            {
-                //exit on first intersection
-                //make the new endpoint the intersection point
-                if (line.IntersectsWith(l))
-                {
-                    bool parallel = false;
-                    var ip = line.FindIntersectionPoint(l,ref parallel);
-
-                    if(parallel)
-                        continue;
-
-                    line.End = ip;
-
-                    line.Intersected = true;
-                    line.Left = end; //original generated end point
-                    line.Right = start; //point of intersection
-                    line.Intersect = ip;
-
-                    //Check if the new line will not be too small
-                    //if it is too small switch the start point with the previous end point
-                    //distance of the original line
-                    double totalDistance = MathHelpers.DistanceBetweenPoints(start, end);
-                    //distance of the start point till the intersect point
-                    double newDistance = MathHelpers.DistanceBetweenPoints(start, ip);
-
-                    //swap occurs when the new distance is smaller than 1/3 of the original distance
-                    if (newDistance < (totalDistance * 0.33))
-                    {
-                        line.Start = end;
-                    }
-
-                    break;
-                }
-
-            }
-
-
-            //Add the line to the roads
-            lines.Add(line);
+            //When an intersection occurs break the line     
+            HandlePossibleRoadIntersections(new Line(start,end),startLine,endLine, roads);
 
             //reduce branches to end recursion
             branches--;
-            if (branches + 1 <= 0 || cellEdges.Count < 1)
+            if (branches + 1 <= 0)
             {
-                return lines;
+                return roads;
             }
 
-            //find new start and end edges
-            line = cellEdges.GetRandomValue();
-            var newEdge = cellEdges.GetRandomValue();
+            //From the pool of lines choose 2 random ones that aren't the same
+            var road1 = roads.GetRandomValue();
+            var road2 = roads.GetRandomValue();
+            //make sure both are unique
+            while (road1 == road2)
+            {
+                road2 = roads.GetRandomValue();
+            }
 
-            while (newEdge == line)
-                newEdge = cellEdges.GetRandomValue();
-
-            double min = 0.33;
-            double max = 1 - min;
-
-            //Generate a new start and endpoint random on the lines
-            start = line.FindRandomPointOnLine(min, max);
-            end = newEdge.FindRandomPointOnLine(min, max);
-
-            end = newEdge.Center();
-            
-            //generate a new road
-            return GenerateRoad(lines, cellEdges,start,end, branches);
+            //generate a new road by connecting 2 roads
+            return GenerateRoad(roads, road1, road2, branches);
         }
 
-        private Line FindLongestLineInCell(List<Line> edges)
+        private SplitLine FindLongestLineInCell(List<Line> edges)
         {
             Point start = Point.Zero, end = Point.Zero;
             double maxDistance = 0;
@@ -168,10 +105,96 @@ namespace CityGenerator
             }
 
             //remove the edges used for the line
-            edges.Remove(e1);
+            //edges.Remove(e1);
             //edges.Remove(e2);
 
-            return new Line(start,end);
+            return new SplitLine(e1, e2);
         }
+
+        private void HandlePossibleRoadIntersections(Line line, Road startLine, Road endLine,List<Road> roads)
+        {
+            bool flipped = false;
+
+            //check for possible intersection, 
+            //if an intersection happens the end point becomes the point of intersection
+            //has to be reverse because otherwise the lines will intersect with the edges
+            for(var i = roads.Count-1; i> 0; i--)
+            {
+                var l = roads[i].RoadLine;
+
+                //if the line intersects
+                if (!line.IntersectsWith(l)) continue;
+
+                //find the intersection point
+                bool parallel = false;
+                var ip = line.FindIntersectionPoint(l, ref parallel);
+
+                //parrallel lines don't intersect so ignore
+                if (parallel) continue;
+
+                //Create the new line from the intersection
+                line = CreateIntersectedLine(line,ip,ref flipped);
+
+                //Split the line that is intersected with in 2 new lines
+                endLine = roads[i];
+
+                //stop at the first intersection
+                break;
+            }
+
+            //Add the new road
+            roads.Add(new Road(line));
+
+            return;
+
+            //remove the road that was intersected(endline) with
+            roads.Remove(endLine);
+            roads.Remove(startLine);
+
+
+
+            //split start line
+            var splitStart = SplitLine(startLine.RoadLine, line.Start);
+            roads.Add(new Road(splitStart.Key));
+            roads.Add(new Road(splitStart.Value));
+
+            var splitEnd = SplitLine(endLine.RoadLine, line.End);
+            roads.Add(new Road(splitEnd.Key));
+            roads.Add(new Road(splitEnd.Value));
+
+
+        }
+
+        private Line CreateIntersectedLine(Line newLine,Point ip, ref bool flipped)
+        {
+            var start = newLine.Start;
+            var end = newLine.End;
+
+            //Check if the new line will not be too small
+            //if it is too small switch the start point with the previous end point
+            var totalDistance = MathHelpers.DistanceBetweenPoints(start, end);
+            var newDistance = MathHelpers.DistanceBetweenPoints(start, ip);
+
+            //Create the new line
+            //swap occurs when the new distance is smaller than 1/3 of the original distance
+            flipped = newDistance < (totalDistance*0.33);
+            var line = flipped? new Line(ip,end) : new Line(start, ip);
+            
+
+            return line;
+        }
+
+        private SplitLine SplitLine(Line line, Point ip)
+        {
+
+            var start = line.Start;
+            var end = line.End;
+
+            return new SplitLine(new Line(start,ip),new Line(ip,end));
+
+
+
+        }
+        
     }
 }

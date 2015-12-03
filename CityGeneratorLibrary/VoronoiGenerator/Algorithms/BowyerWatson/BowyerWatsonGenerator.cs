@@ -133,6 +133,7 @@ namespace Voronoi.Algorithms
             //Initialize Cell list
             var cells = new Dictionary<Point, Cell>();
 
+            //Create a dictionary
             foreach (var point in _voronoi.Sites)
             {
 
@@ -147,14 +148,16 @@ namespace Voronoi.Algorithms
             
             foreach (var line in lines)
             {
-
                 cells[line.Left].AddPoint(line.Start);
                 cells[line.Left].AddPoint(line.End);
                 cells[line.Left].AddLine(line);
+                line.CellLeft = cells[line.Left];
 
                 cells[line.Right].AddPoint(line.Start);
                 cells[line.Right].AddPoint(line.End);
                 cells[line.Right].AddLine(line);
+                line.CellRight = cells[line.Right];
+                line.bSharedBetweenCells = true;
             }
 
             _voronoi.SiteCellPoints = cells;

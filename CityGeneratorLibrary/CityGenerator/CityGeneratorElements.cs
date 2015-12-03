@@ -22,23 +22,50 @@ namespace CityGenerator
 
     public class Road
     {
-        //Voronoi lines the road is made up of
-        public List<Line> Lines; 
+        //the line the road is made of
+        public Line RoadLine;
 
-        //Start point of the road
-        public Point Start;
-        
-        //endpoint of the road
-        public Point End;
+        //spots possible buildings will be spawned
+        public List<Point> BuildSites;
 
         public Road()
         {
-            Lines = new List<Line>();
-            Start = Point.Zero;
-            End = Point.Zero;
+            BuildSites = new List<Point>();
+        }
+
+        public Road(Line line)
+        {
+            RoadLine = line;
+            BuildSites = new List<Point>();
         }
     }
 
+
+   
+
+    public class DistrictCell
+    {
+        public string DistrictType;
+
+        public Cell Cell;
+
+
+        public List<Road> Roads;
+       
+
+        public DistrictCell(string type, Cell cell)
+        {
+            DistrictType = type;
+            Cell = cell;
+            Roads = new List<Road>();
+            
+        }
+
+        public override string ToString()
+        {
+            return Cell.ToString();
+        }
+    }
 
     /// <summary>
     /// A city can consist of multiple districts
@@ -51,32 +78,9 @@ namespace CityGenerator
         //all Voronoi cells part of this district
         public List<DistrictCell> Cells;
 
-       
-
         public District()
         {
             Cells = new List<DistrictCell>();
-        }
-    }
-
-    public class DistrictCell
-    {
-        public string DistrictType;
-
-        public Cell Cell;
-
-        //spots possible buildings will be spawned
-        public List<Point> BuildSites;
-
-        //The road that goes through the zone
-        public Road Road;
-
-
-        public DistrictCell(string type, Cell cell)
-        {
-            DistrictType = type;
-            Cell = cell;
-            BuildSites = new List<Point>();
         }
     }
 

@@ -18,11 +18,9 @@ namespace CityGeneratorWPF.Service
     /// </summary>
     public class DrawService
     {
-
         /// <summary>
         /// Event that is called when the user clicks on the canvas
         /// </summary>
-        /// <param name="p"></param>
         public delegate void ClickOnCanvas(Point p);
         public ClickOnCanvas OnClick;
 
@@ -33,11 +31,9 @@ namespace CityGeneratorWPF.Service
 
         public Canvas Canvas => _drawCanvas;
 
-
         /// <summary>
         /// Create a new DrawService and hook up the events
         /// </summary>
-        /// <param name="drawCanvas"></param>
         public DrawService(Canvas drawCanvas)
         {
             _drawCanvas = drawCanvas;
@@ -47,8 +43,6 @@ namespace CityGeneratorWPF.Service
         /// <summary>
         /// On mouse Down event
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private void OnCanvasMouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             //get point
@@ -68,9 +62,6 @@ namespace CityGeneratorWPF.Service
 
         /// <summary>
         /// Add a point to the canvas
-        /// <param name="p">Center position of the point</param>
-        /// <param name="radius">radius of the point</param>
-        /// <param name="c">color of the point</param>
         /// </summary>
         public void DrawPoint(Point p, double radius, Color c)
         {
@@ -218,28 +209,45 @@ namespace CityGeneratorWPF.Service
 
         public void DrawCell(Cell cell, Color c, bool bFill = true,bool bBorder = false)
         {
-            //Create polygon
-            var polygon = new Polygon()
+            if (bFill)
             {
-                Stroke = new SolidColorBrush(Colors.Red),
-                Fill = new SolidColorBrush(c),
-                FillRule = FillRule.EvenOdd,
-                StrokeThickness = 1
-            };
+                //Create polygon
+                var polygon = new Polygon()
+                {
+                    Stroke = new SolidColorBrush(Colors.Red),
+                    Fill = new SolidColorBrush(c),
+                    FillRule = FillRule.EvenOdd,
+                    StrokeThickness = 1
+                };
 
-            polygon.Stroke = (bBorder)? new SolidColorBrush(Colors.Red) : new SolidColorBrush(c);
+                polygon.Stroke = (bBorder) ? new SolidColorBrush(Colors.Red) : new SolidColorBrush(c);
 
-            //Create a point list for the polygon
-            var pc = new PointCollection();
-            foreach (var point in cell.Points)
-                pc.Add(new System.Windows.Point(point.X, point.Y));
+                //Create a point list for the polygon
+                var pc = new PointCollection();
+                foreach (var point in cell.Points)
+                {
+                    pc.Add(new System.Windows.Point(point.X, point.Y));
+                }
 
-            polygon.Points = pc;
+                polygon.Points = pc;
 
-            //Draw
-            _drawCanvas.Children.Add(polygon);
 
-          
+                //Draw
+                _drawCanvas.Children.Add(polygon);
+            }
+            else
+            {
+                foreach (var edge in cell.Edges)
+                {
+                    DrawLine(edge,c);
+                }
+            }
+
+            //Info about the Cell
+            //var areaOfCell = cell.Area();
+            //var centerOfcell = cell.Center();
+            //DrawText($"{areaOfCell}",Colors.Black, centerOfcell);
+
         }
 
         public void DrawText(string text, Color c, Point position)
@@ -249,8 +257,6 @@ namespace CityGeneratorWPF.Service
                 Text = text,
                 Foreground = new SolidColorBrush(c)
             };
-
-
 
             Canvas.SetLeft(textBlock, position.X);
             Canvas.SetTop(textBlock, position.Y);
@@ -271,67 +277,37 @@ namespace CityGeneratorWPF.Service
                     //DrawCell(cell.Cell, cellColor);
                 }
 
-                if (bDrawRoads && cell.Road != null)
+                if (bDrawRoads && cell.Roads != null)
                 {
                     var roadColor = Color.FromRgb(75,75,75);
-                    //roadColor = Colors.OrangeRed;
+                    
 
-                    DrawRoad(cell.Road,roadColor,Colors.Red,Colors.Aqua,false);
+                    foreach (var road in cell.Roads)
+                    {
+                        //roadColor = Extensions.Extensions.RandomColor(false,225);
+                        DrawRoad(road, roadColor, Colors.Red, Colors.Aqua, false,1);
+                    }
                 }
 
-                foreach (var p in cell.BuildSites)
-                {
-                    var pc = Color.FromRgb(50, 50, 50);
-                    DrawPoint(p,4,pc);
-                }
+              
+
             };
         }
 
         public void DrawRoad(Road road, Color linecolor, Color startColor, Color endColor, bool drawStartEnd = true, int width = 1)
         {
-            foreach (var line in road.Lines)
-            {
-                //linecolor = Colors.OrangeRed.GetRandomColorOffset(0.07);
-
-
                 //width = line.Intersected ? width + 1 : width;
-                DrawLine(line,linecolor, width);
+                DrawLine(road.RoadLine,linecolor, width);
 
-                continue;
-
-                //intersection debug
-                #region intersection Debug  
-                if (line.Left != null)
-                {
-                    DrawPoint(line.Left, 10, linecolor); //original end point
-                    DrawPoint(line.Left,5, Colors.Green); //original end point
-                    
-                }
-
-                if (line.Right != null)
-                {
-                    DrawPoint(line.Right, 10, linecolor); //original start point
-                    DrawPoint(line.Right, 5, Colors.DarkRed); //original start point
-
-                }
+            //DrawPoint(road.RoadLine.Start,10,Colors.Red);
+            //DrawPoint(road.RoadLine.End, 5, Colors.CornflowerBlue);
 
 
-                if (line.Intersect != null)
-                {
-                    DrawPoint(line.Intersect, 7, endColor); //point of intersection
-                }
-                #endregion
-
+            var pc = Color.FromRgb(50,50,50);
+            foreach (var p in road.BuildSites)
+            {
+                DrawPoint(p, 5, pc);
             }
-
-            if(!drawStartEnd)
-                return;
-
-            var radius = 8;
-            //start and endpoint
-            DrawPoint(road.Start,radius,startColor);
-            DrawPoint(road.End, radius, endColor);
-
-        }
+         }
     }
 }

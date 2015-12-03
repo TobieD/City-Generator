@@ -12,6 +12,45 @@ public static class ExtensionMethods
         return new Vector3((float)p.X,0,(float)p.Y);
     }
 
+    /// <summary>
+    /// Finds or create a game object with the given name
+    /// </summary>
+    public static GameObject FindGameObject(string objectName)
+    {
+        //find the object
+        var go = GameObject.Find(objectName);
+
+        //when it is found destroy it, this will also destroy its child objects.
+        if (go != null)
+        {
+            Object.DestroyImmediate(go);
+        }
+
+        //create road object as parent
+        return new GameObject(objectName);
+    }
+
+
+    public static Vector3 GetPrefabBounds(this GameObject prefab)
+    {
+        //Have to create the prefab
+        var instance = (GameObject) Object.Instantiate(prefab);
+
+        //Get Actual size of the prefab
+        var prefabRenderer = instance.GetComponentInChildren<MeshRenderer>();
+        if (prefabRenderer == null)
+        {
+            Debug.LogError("Prefab has no render component on it or its children\nUnable to get bounds!");
+            return Vector3.zero;
+        }
+
+        var bounds = prefabRenderer.bounds.size;
+
+        Object.DestroyImmediate(instance);
+
+        return bounds;
+    }
+
 }
 
 public static class TownBuilder
@@ -61,59 +100,7 @@ public static class TownBuilder
 
         return mesh;
     }
-
-    public static Mesh CreateZoneBoundMesh(DistrictCell cell, float height)
-    {
-        var points = cell.Cell.Points;
-        
-        var normals = new Vector3[points.Count + 1];
-        for (int i = 0; i < normals.Length; i++)
-        {
-            normals[i] = Vector3.up;
-
-        }
-
-        //Vertices
-        var vertices = new Vector3[points.Count + 1];
-        Vector3 center = MathHelpers.FindCenteroidOfCell(cell.Cell).ToVector3();
-        vertices[0] = center;
-        for (int i = 1; i < vertices.Length -1; i++)
-        {
-            vertices[i] = points[i].ToVector3() - center;
-        }
-
-        //indices
-        var indices = new int[points.Count * 3];
-        for (int i = 0; i < points.Count -1; i++)
-        {
-            indices[i*3] = i + 2;
-            indices[i*3 + 1] = 0;
-            indices[i*3 + 2] = i + 1;
-        }
-
-        indices[(points.Count - 1)*3] = 1;
-        indices[(points.Count - 1) * 3 + 1] = 0;
-        indices[(points.Count - 1)*3 + 2] = points.Count;
-
-
-
-
-
-
-
-
-        var mesh = new Mesh
-        {
-            name = "Zone Bound",
-            vertices = vertices,
-            normals = normals,
-            triangles = indices
-        
-        };
-
-        return mesh;
-    }
-
+   
     public static Mesh CreateRoadMesh(Line line, GameObject parent, float width)
     {
         var halfWidth = width / 2;

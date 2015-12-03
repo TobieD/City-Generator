@@ -41,43 +41,50 @@ namespace CityGenerator
             //find all cells with the corresponding district type
             foreach (var dc in _districtCells)
             {
-                if (dc.DistrictType == district.DistrictType)
+                if (dc.DistrictType != district.DistrictType)
                 {
-                    //generate a road inside the district cell
-                    dc.Road = _roadBuilder.BuildRoad(_roadSettings, dc);
+                    continue;
+                }
+                
+                district.Cells.Add(dc);
 
-                    dc.Road.Lines.SortBySmallestLength();
+                //generate roads inside the district cell
+                dc.Roads = _roadBuilder.BuildRoad(_roadSettings, dc);
 
-                    //Generate build sites near the generated roads starting from the smallest line
-                    var percentage = settings.Percentage/100;
-
-                    //the first entry is always the shortest
-                    var shortest = dc.Road.Lines[0];
-                    var p = shortest.FindRandomPointOnLine(percentage, percentage);
-
-                    //make sure the distance between building points is always equal to this
-                    var uniformDistanceBetweenPoints = MathHelpers.DistanceBetweenPoints(shortest.Start, p);
-
-                    foreach (var l in dc.Road.Lines)
-                    {
-                        var length = l.Length();
-
-                        var pc = uniformDistanceBetweenPoints / length;
-
-                        dc.BuildSites.AddRange(l.GeneratePointsNearLine(pc, settings.Offset));
-
-                    }
-
-                    buildpoints.AddRange(dc.BuildSites);
-                    district.Cells.Add(dc);
+                if (dc.Roads.Count < 1)
+                {
+                    continue;
                 }
 
+                dc.Roads.SortBySmallestLength();
+
+                //Generate build sites near the generated roads starting from the smallest line
+                var percentage = settings.Percentage/100;
+
+                //the first entry is always the shortest
+                var shortest = dc.Roads[0].RoadLine;
+                var p = shortest.FindRandomPointOnLine(percentage, percentage);
+
+                //make sure the distance between building points is always equal to this
+                var uniformDistanceBetweenPoints = MathHelpers.DistanceBetweenPoints(shortest.Start, p);
+
+                //Generate build points for every road inside the district cell
+                foreach (var road in dc.Roads)
+                {
+                    var length = road.RoadLine.Length();
+
+                    var pc = uniformDistanceBetweenPoints / length;
+
+                    //the points will be generated with a specified interval and a specified offset from the road
+                    road.BuildSites.AddRange(road.RoadLine.GeneratePointsNearLineOfCell(dc.Cell,pc, settings.Offset));
+                    buildpoints.AddRange(road.BuildSites);
+
+                }
+                
                 //Only create one cell
                 if(bEnableDebugMode)
                     break;
             }
-
-            //filter out build sites that are too close together
 
             return district;
         }
@@ -89,7 +96,22 @@ namespace CityGenerator
 
             //Create a district cell from the voronoi cells
             var cells = voronoi.GetCellsInBounds();
-            var districtCells = cells.Select(cell => new DistrictCell(settings.DistrictSettings[0].Type, cell)).ToList();
+            //var districtCells = cells.Select(cell => new DistrictCell(settings.DistrictSettings[0].Type, cell)).ToList();
+
+
+            var districtCells = new List<DistrictCell>();
+
+            foreach (var cell in cells)
+            {
+
+                if (cell.Edges.Count < 2)
+                {
+                    continue;
+                }
+
+                districtCells.Add(new DistrictCell(settings.DistrictSettings[0].Type,cell));
+            }
+
 
             //tag random cells
             foreach (var setting in settings.DistrictSettings)

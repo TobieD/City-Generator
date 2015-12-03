@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Remoting.Metadata.W3cXsd2001;
+using CityGenerator;
 using Voronoi;
 using Voronoi.Algorithms;
 
@@ -204,14 +205,25 @@ namespace Helpers
             var p = Point.Zero;
             var p1 = l.Start;
             var p2 = l.End;
-
+            
+            //Convert line to normalized unity vector
             var dx = p2.X - p1.X;
             var dy = p2.Y - p1.Y;
+            double mag = Math.Sqrt(dx*dx + dy*dy);
+
+            dx /= mag;
+            dy /= mag;
+
+            //Translate the point and get the dot product
+            double lambda = (dx*(p3.X - p1.X)) + (dy*(p3.Y - p1.Y));
 
             p.X = dy;
             p.Y = -dx;
 
-            return p3 + p;
+            p.X = (dx*lambda) + p1.X;
+            p.Y = (dy * lambda) + p1.Y;
+
+            return p;
         }
 
         /// <summary>
@@ -281,12 +293,11 @@ namespace Helpers
         }
 
         /// <summary>
-        /// Create random points near a line based on an offset and a division
+        /// Create random points near a line based on an offset and a division on the inside of the cell
         /// </summary>
-        public static List<Point> GeneratePointsNearLine(this Line line, double percentage, int offset)
+        public static List<Point> GeneratePointsNearLineOfCell(this Line line,Cell cell, double percentage, int offset,bool twoSided = false)
         {
             var points = new List<Point>();
-
             var p1X = line.Start.X;
             var p1Y = line.Start.Y;
             var p2X = line.End.X;
@@ -295,16 +306,16 @@ namespace Helpers
             //generate an offset line left and right of the original line
             var l = Math.Sqrt(Power(p1X - p2X) + Power(p1Y - p2Y));
 
-            //left line
+            //left off line
             var p3 = new Point(p1X + offset * (p2Y - p1Y) / l, p1Y + offset * (p1X - p2X) / l);
             var p4 = new Point(p2X + offset * (p2Y - p1Y) / l, p2Y + offset * (p1X - p2X) / l);
 
             var left = new Line(p3, p4);
 
             //flip for opposite side
-            offset *= -1;
+            offset *= -1;  
 
-            //right line
+            //right off line
             var p5 = new Point(p1X + offset * (p2Y - p1Y) / l, p1Y + offset * (p1X - p2X) / l);
             var p6 = new Point(p2X + offset * (p2Y - p1Y) / l, p2Y + offset * (p1X - p2X) / l);
 
@@ -312,13 +323,35 @@ namespace Helpers
 
             double max = 1.0;
 
+            bool bLeftIsInner = true;
+
+            //determine the line that is inside the cell
+
+            //take the center of the left and right line
+            var leftCenter = left.Center();
+            var rightCenter = right.Center();
+
+            //take the distance from left to cell sitepoint and right to cell sitepoint
+            //line with the least distance is on the inside
+
+            var leftDis = DistanceBetweenPoints(leftCenter, cell.SitePoint);
+            var rightDis = DistanceBetweenPoints(rightCenter, cell.SitePoint);
+
+            var innerLine = (leftDis < rightDis) ? left : right;
+
             //make a random point every percentage on the line
             for (double i = percentage; i < max; i+= percentage)
             {
-                
-
-                points.Add(left.FindRandomPointOnLine(i, i));
-                points.Add(right.FindRandomPointOnLine(i, i));
+                //Doesn't matter what side
+                if (twoSided)
+                {
+                    points.Add(right.FindRandomPointOnLine(i, i));
+                    points.Add(left.FindRandomPointOnLine(i, i));
+                }
+                else
+                {
+                    points.Add(innerLine.FindRandomPointOnLine(i, i));
+                }
 
             }
             return points;
@@ -689,7 +722,7 @@ namespace Helpers
         /// <summary>
         /// Find the center point of a cell
         /// </summary>
-        public static Point FindCenteroidOfCell(Cell cell)
+        public static Point Center(this Cell cell)
         {
 
             //add the first point at the end
@@ -710,7 +743,7 @@ namespace Helpers
             }
 
             //divide by 6 times the polygon Area
-            double area = FindAreaOfCell(cell);
+            double area = cell.Area();
             x /= (6 * area);
             y /= (6 * area);
 
@@ -727,7 +760,7 @@ namespace Helpers
         /// <summary>
         /// Find the area of a cell
         /// </summary>
-        public static double FindAreaOfCell(Cell cell)
+        public static double Area(this Cell cell)
         {
             //add the first point at the end
             Point[] pts = new Point[cell.Points.Count + 1];
@@ -909,7 +942,7 @@ namespace Helpers
             
             foreach (var cell in voronoi.VoronoiCells)
             {
-                var cellCenter = MathHelpers.FindCenteroidOfCell(cell);
+                var cellCenter = cell.Center();
 
                 //check if zone is in bounds (avoid generating infinitely large zones)
                 if (cellCenter.X > voronoi.Bounds.Right || cellCenter.Y > voronoi.Bounds.Bottom
@@ -970,9 +1003,9 @@ namespace Helpers
 
     public static class ListExtensions
     {
-        public static void SortBySmallestLength(this IList<Line> l)
+        public static void SortBySmallestLength(this IList<Road> l)
         {
-            l = l.OrderBy(x => x.Length()).ToList();
+            l = l.OrderBy(x => x.RoadLine.Length()).ToList();
         }
     }
 }

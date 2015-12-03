@@ -22,7 +22,6 @@ public class ZoneEdit : Editor
         if (townGen.PrefabsPerZone == null)
         {
             EditorGUILayout.LabelField("No prefabs set!\nPlease build a city first.");
-
             return;
         }
 
@@ -32,15 +31,15 @@ public class ZoneEdit : Editor
 
         //Show bounds visualization
         _townZone.bDrawBounds = EditorGUILayout.Toggle("Show Bounds", _townZone.bDrawBounds);
-        
+
         //change settings
-       if(GUILayout.Button("Rebuild"))
+        if (GUILayout.Button("Rebuild"))
        {
             _townZone.SetZoneType(districtTypes[_selectedIndex]);
 
        }
 
-
-
     }
+
+    
 }

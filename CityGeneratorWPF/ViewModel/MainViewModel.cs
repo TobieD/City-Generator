@@ -9,6 +9,7 @@ using CityGeneratorWPF.Extensions;
 using CityGeneratorWPF.Service;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
+using Helpers;
 using Microsoft.Win32;
 using Points;
 using Voronoi;
@@ -308,7 +309,7 @@ namespace CityGeneratorWPF.ViewModel
         {
             //initialize draw service
             _drawService = drawService;
-            _drawService.OnClick += OnClick;
+            //_drawService.OnClick += OnClick;
 
             //create empty voronoi Diagram
             _points = new List<Point>();
@@ -334,7 +335,13 @@ namespace CityGeneratorWPF.ViewModel
             RoadRiverSettings.Add(_citySettings.RoadSettings);
             RoadRiverSettings.Add(_citySettings.RiverSettings);
 
-            
+            //debug for math test and drawing
+            //MathTesting();
+
+            #if (DEBUG)
+            Seed = 0;
+            UseSeed = true;
+            #endif
 
         }
 
@@ -371,7 +378,7 @@ namespace CityGeneratorWPF.ViewModel
             
             //update generation timer
             var time = timer.ElapsedMilliseconds/1000.0;
-            GenerationTimeText = $"Generated {PointsToGenerate} points in {time} seconds.";
+            GenerationTimeText = $"Generated {_points.Count} points in {time} seconds.";
 
             //update randomly generated seed
             if (UseSeed == false)
@@ -409,7 +416,7 @@ namespace CityGeneratorWPF.ViewModel
 
             //update info
             var time = timer.ElapsedMilliseconds/1000.0;
-            GenerationTimeText = $"For {PointsToGenerate} points using {VoronoiAlgorithm.ToString()}: {time} seconds.";
+            GenerationTimeText = $"For {_points.Count} points using {VoronoiAlgorithm.ToString()}: {time} seconds.";
 
             //Update canvas
             RefreshCanvas();
@@ -490,33 +497,12 @@ namespace CityGeneratorWPF.ViewModel
 
 
                 //Voronoi Colors
-                if (_voronoiDiagram.VoronoiCells != null && ColorVoronoi == true)
+                if (_voronoiDiagram.VoronoiCells != null && ColorVoronoi.Value == true || DrawVoronoi.Value == true)
                 {
-                    foreach (var cell in _voronoiDiagram.VoronoiCells)
+                    foreach (var cell in _voronoiDiagram.GetCellsInBounds())
                     {
-                        //_drawService.DrawPolygon(cell.Points, _baseColor.GetRandomColorOffset(0.2));
-                        _drawService.DrawCell(cell, _baseColor.GetRandomColorOffset(0.2));
-                    }
-                }
-
-
-                //Voronoi
-                if (_voronoiDiagram.HalfEdges != null && DrawVoronoi == true)
-                {
-                    foreach (var l in _voronoiDiagram.HalfEdges)
-                    {
-                        if (DrawVoronoi == true)
-                        {
-
-                            var c = DrawTriangles == true ? Colors.Red : lineColor;
-                            _drawService.DrawLine(l, c);
-                        }
-
-                        if (ShowPointInfo == true)
-                        {
-                            _drawService.DrawText(l.Start.ToString(), lineColor, l.Start);
-                            _drawService.DrawText(l.End.ToString(), lineColor, l.End);
-                        }
+                        var c = (ColorVoronoi == true) ? _baseColor.GetRandomColorOffset(0.2) : lineColor;
+                        _drawService.DrawCell(cell,c , ColorVoronoi.Value);
                     }
                 }
             }
@@ -621,6 +607,12 @@ namespace CityGeneratorWPF.ViewModel
             DistrictSettings.Remove(found);
             //RaisePropertyChanged("DistrictSettings");
 
+        }
+
+
+        private void MathTesting()
+        {
+            
         }
     }
 }

@@ -53,7 +53,6 @@ namespace Voronoi
             var width = settings.Width;
             var length = settings.Length;
 
-
             //Select algorithm to use
             switch (settings.VoronoiAlgorithm)
             {
@@ -62,10 +61,8 @@ namespace Voronoi
                 case VoronoiAlgorithm.BoywerWatson:
                 {
                     voronoi = new BowyerWatsonGenerator().GetVoronoi(points);
-                        
-                    break;;
+                    break;
                 }
-
                 // Voronoi according to Fortunes Algorithm
                 // http://blog.ivank.net/fortunes-algorithm-and-implementation.html
                 case VoronoiAlgorithm.Fortune:
@@ -73,7 +70,6 @@ namespace Voronoi
                     voronoi = new FortuneGenerator().GetVoronoi(points);
                         break;
                 }
-
                 default:
                     throw new ArgumentOutOfRangeException(nameof(settings.VoronoiAlgorithm), settings.VoronoiAlgorithm, null);
             }
@@ -81,6 +77,8 @@ namespace Voronoi
 
             voronoi.Bounds = new Rectangle(startX, startY, width, length);
             voronoi.Sites = points;
+
+            voronoi.FinishVoronoi();
 
             return voronoi;;
         }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
-
+using Assets.Editor.Scripts;
 using Points;
 using UnityEngine;
 using UnityEditor;
@@ -11,7 +11,9 @@ using UnityEditor;
 using Voronoi;
 using CityGenerator;
 
-
+/// <summary>
+/// Export as file specifier
+/// </summary>
 public enum ExportSettingType
 {
     //JSON,
@@ -28,23 +30,30 @@ public enum CityType
     Metropolis
 }
 
+/// <summary>
+/// UI wrapper around the TownGenerator
+/// </summary>
 public class TownGeneratorWindow : EditorWindow
 {
-    //Generator 
+    //Generator
     private TownGenerator _townGenerator;
+
+    //Settings
     private GenerationSettings _generationSettings;
     private CitySettings _citySettings;
 
     private CityType _cityType = CityType.Village;
     private bool _showAdvancedSettings = false;
 
+    //terrain editor
+    private TerrainEditor _terrainEditor;
+
     //District Editor for every district
     private Dictionary<string, DistrictEditor> _prefabSelectors = new Dictionary<string, DistrictEditor>();
     private string _zoneInput = "";
 
-    //Road - River Editor
+    //Road
     private RoadEditor _roadEditor;
-    private RoadEditor _riverEditor;
 
     //Foldouts
     private bool _foldoutSettings = true;
@@ -61,69 +70,81 @@ public class TownGeneratorWindow : EditorWindow
     private static void Init()
     {
         //get exisiting open window or create one if none is available
-        TownGeneratorWindow window = (TownGeneratorWindow) EditorWindow.GetWindow(typeof (TownGeneratorWindow));
+        var window = (TownGeneratorWindow) EditorWindow.GetWindow(typeof (TownGeneratorWindow));
         window.Initialize();
         window.Show();
     }
 
+    /// <summary>
+    /// Initialize base settings
+    /// </summary>
     public void Initialize()
     { 
         //create a town generator object when it doesn't exist yet
-        if (_townGenerator == null)
+        if (_townGenerator != null) return;
+
+
+        //Access towngenerator
+        _townGenerator = TownGenerator.GetInstance();
+
+        //Set default settings
+        _generationSettings = new GenerationSettings
         {
-            _townGenerator = TownGenerator.GetInstance();
-            _generationSettings = new GenerationSettings();
-            _citySettings = new CitySettings();
-            
-            _generationSettings.VoronoiAlgorithm = VoronoiAlgorithm.Fortune;
-            _generationSettings.PointAlgorithm = PointGenerationAlgorithm.CityLike;;
+            VoronoiAlgorithm = VoronoiAlgorithm.Fortune,
+            PointAlgorithm = PointGenerationAlgorithm.CityLike
+        };
 
-            //base types
-            CreatePrefabSelection("Grass");
-            CreatePrefabSelection("Urban");
-            CreatePrefabSelection("Factory");
+        //City settings
+        _citySettings = new CitySettings();
 
-            _roadEditor = new RoadEditor(_citySettings.RoadSettings);
-            _riverEditor = new RoadEditor(_citySettings.RiverSettings);
+        //Create a base district type
+        CreatePrefabSelection("Grass");
 
-            //foldout style
-            _foldoutStyle = new GUIStyle(EditorStyles.foldout)
-            {
-                fontStyle = FontStyle.Bold,
-                //fontSize = 10,
-            };
+        //Terrain settings editor
+        _terrainEditor = new TerrainEditor(new TerrainSettings());
 
-            var c = Color.black;
-            _foldoutStyle.onActive.textColor = c;
-            _foldoutStyle.normal.textColor = c;
-            _foldoutStyle.onNormal.textColor = c;
-            _foldoutStyle.hover.textColor = c;
-            _foldoutStyle.onHover.textColor = c;
-            _foldoutStyle.focused.textColor = c;
-            _foldoutStyle.onFocused.textColor = c;
-            _foldoutStyle.active.textColor = c;
-            _foldoutStyle.onActive.textColor = c;
+        //Road settings editor
+        _roadEditor = new RoadEditor(_citySettings.RoadSettings);
 
+        //Define a style for the foldout
+        _foldoutStyle = new GUIStyle(EditorStyles.foldout)
+        {
+            fontStyle = FontStyle.Bold,
+        };
 
-
-        }
-
+        var c = Color.black;
+        _foldoutStyle.onActive.textColor = c;
+        _foldoutStyle.normal.textColor = c;
+        _foldoutStyle.onNormal.textColor = c;
+        _foldoutStyle.hover.textColor = c;
+        _foldoutStyle.onHover.textColor = c;
+        _foldoutStyle.focused.textColor = c;
+        _foldoutStyle.onFocused.textColor = c;
+        _foldoutStyle.active.textColor = c;
+        _foldoutStyle.onActive.textColor = c;
     }
 
-    /// Drawn to the window
+    /// <summary>
+    /// Drawing
+    /// </summary>
     void OnGUI()
     {
         //Create TownGenerator if there isn't one
         Initialize();
 
+        //CitySettings.DebugMode = true;
 
-
+        //Show import export UI
         ImportExportSettings();
 
-        _citySettings.DebugMode = EditorGUILayout.Toggle("Debug Mode", _citySettings.DebugMode);
+        //Enable/Disable debug mode
+        _citySettings.DebugMode = EditorGUILayout.Toggle("Debug Mode", _citySettings.DebugMode);//Draw Generation settings
 
-        //Draw Generation settings
+        //generation settings
         GenerationSettings();
+
+        //Terrain settings
+        _terrainEditor.DrawGUI(_foldoutStyle);
 
         //District Settings
         ZonePrefabSelection();
@@ -133,11 +154,39 @@ public class TownGeneratorWindow : EditorWindow
 
         //Draw Buttons
         GenerationButtons();
-        
 
     }
 
     #region GUI
+    /// <summary>
+    /// Save /Load Settings from a file
+    /// </summary>
+    private void ImportExportSettings()
+    {
+        GUILayout.Label("Import / Export", EditorStyles.boldLabel);
+        //Load/Saving
+        GUILayout.BeginHorizontal();
+        _saveFile = EditorGUILayout.TextField(_saveFile);
+        _exportSetting = (ExportSettingType)EditorGUILayout.EnumPopup(_exportSetting);
+
+        GUILayout.EndHorizontal();
+        GUILayout.BeginHorizontal();
+        if (GUILayout.Button("Import"))
+        {
+            LoadSettings();
+        }
+
+        if (GUILayout.Button("Export"))
+        {
+            SaveSettings();
+        }
+
+        GUILayout.EndHorizontal();
+    }
+
+    /// <summary>
+    /// Adjust settings that generate the voronoi diagram
+    /// </summary>
     private void GenerationSettings()
     {
         //foldout settings
@@ -189,61 +238,10 @@ public class TownGeneratorWindow : EditorWindow
         EditorGUI.indentLevel--;
 
     }
-
-    private void ImportExportSettings()
-    {
-        GUILayout.Label("Import / Export", EditorStyles.boldLabel);
-        //Load/Saving
-        GUILayout.BeginHorizontal();
-        _saveFile = EditorGUILayout.TextField(_saveFile);
-        _exportSetting = (ExportSettingType)EditorGUILayout.EnumPopup(_exportSetting);
-
-        GUILayout.EndHorizontal();
-        GUILayout.BeginHorizontal();
-        if (GUILayout.Button("Import"))
-        {
-            LoadSettings();
-        }
-
-        if (GUILayout.Button("Export"))
-        {
-            SaveSettings();
-        }
-
-        GUILayout.EndHorizontal();
-    }
-
-    private void GenerationButtons()
-    {
-        GUILayout.BeginHorizontal();
-        if (GUILayout.Button("Generate"))
-        {
-            _generationSettings = _showAdvancedSettings ? _generationSettings : GetSettingsFromPreset(_cityType);
-            
-            //Store district information
-            _citySettings.DistrictSettings = MakeDistrictSettings();
-            _citySettings.RiverSettings = _riverEditor.Settings;
-            _citySettings.RoadSettings = _roadEditor.Settings;
-
-            _townGenerator.Generate(_generationSettings, _citySettings);
-            _townGenerator.PrefabsPerZone = MakePrefabList();
-        }
-
-        if (GUILayout.Button("Build"))
-        {
-            _townGenerator.Build();
-        }
-
-        if (GUILayout.Button("Clear"))
-        {
-            _townGenerator.Clear();
-        }
-
-        GUILayout.EndHorizontal();
-        
-    }
-
-    //select prefabs for a specific zone
+    
+    /// <summary>
+    /// select prefabs for a specific zone
+    /// </summary>
     private void ZonePrefabSelection()
     {
         //GUILayout.Label("City Settings", EditorStyles.boldLabel);
@@ -277,6 +275,9 @@ public class TownGeneratorWindow : EditorWindow
 
     }
 
+    /// <summary>
+    /// Add or delete a new district type
+    /// </summary>
     private void AddOrRemoveZoneType()
     {
         EditorGUI.indentLevel++;
@@ -304,9 +305,12 @@ public class TownGeneratorWindow : EditorWindow
         EditorGUI.indentLevel--;
     }
 
+    /// <summary>
+    /// Edit road settings
+    /// </summary>
     private void RoadRiverSettings()
     {
-        _foldoutRiverEdit = EditorGUILayout.Foldout(_foldoutRiverEdit, "Road - River Settings", _foldoutStyle);
+        _foldoutRiverEdit = EditorGUILayout.Foldout(_foldoutRiverEdit, "Road Settings", _foldoutStyle);
 
         if (!_foldoutRiverEdit)
         {
@@ -315,13 +319,54 @@ public class TownGeneratorWindow : EditorWindow
 
         EditorGUI.indentLevel++;
         _roadEditor.DrawGUI(_foldoutStyle);
-        _riverEditor.DrawGUI(_foldoutStyle);
         EditorGUI.indentLevel--;
 
     }
-#endregion  
+
+    /// <summary>
+    /// The buttons for generating, building and resetting
+    /// </summary>
+    private void GenerationButtons()
+    {
+        GUILayout.BeginHorizontal();
+
+        //Generate a terrain and a voronoi diagram on the terrain
+        if (GUILayout.Button("Generate"))
+        {
+            //Use custom settings or a preset
+            _generationSettings = _showAdvancedSettings ? _generationSettings : GetSettingsFromPreset(_cityType);
+
+            //Store district information
+            _citySettings.DistrictSettings = MakeDistrictSettings();
+            _citySettings.RoadSettings = _roadEditor.Settings;
+
+            _townGenerator.Generate(_generationSettings, _citySettings, _terrainEditor.GetSettings());
+            _townGenerator.PrefabsPerZone = MakePrefabList();
+            _townGenerator.RoadPrefabs = _roadEditor.RoadPrefabs;
+        }
+
+        //Using the voronoi data, create a city and build it
+        if (GUILayout.Button("Build"))
+        {
+            _townGenerator.Build();
+        }
+
+        //Clear all generated data
+        if (GUILayout.Button("Clear"))
+        {
+            _townGenerator.Clear();
+        }
+
+        GUILayout.EndHorizontal();
+
+    }
+    #endregion
 
     #region Helpers
+
+    /// <summary>
+    /// Create a new district zone
+    /// </summary>
     private DistrictEditor CreatePrefabSelection(string type)
     {
         if (_prefabSelectors.ContainsKey(type))
@@ -350,33 +395,33 @@ public class TownGeneratorWindow : EditorWindow
         {
             //Small
             case CityType.Village:
-                {
-                    genSettings.Width = 7500;
-                    genSettings.Length = 7500;
-                    genSettings.PointAlgorithm = PointGenerationAlgorithm.Simple;
-                    genSettings.Amount = 2500;
-
-                    break;
-                }
+            {
+                genSettings.Width = 150;
+                genSettings.Length = 150;
+                genSettings.PointAlgorithm = PointGenerationAlgorithm.Simple;
+                genSettings.Amount = 20;
+                break;
+            }
 
                 //medium
             case CityType.Town:
-                {
-                    genSettings.Width = 10000;
-                    genSettings.Length = 10000;
-                    genSettings.PointAlgorithm = PointGenerationAlgorithm.CityLike;
-                    genSettings.Amount = 8000;
-                    break;
-                }
+            {
+                genSettings.Width = 10000;
+                genSettings.Length = 10000;
+                genSettings.PointAlgorithm = PointGenerationAlgorithm.CityLike;
+                genSettings.Amount = 8000;
+                break;
+            }
+
             //large
             case CityType.Metropolis:
-                {
-                    genSettings.Width = 20000;
-                    genSettings.Length = 20000;
-                    genSettings.PointAlgorithm = PointGenerationAlgorithm.CityLike;
-                    genSettings.Amount = 16000;
-                    break;
-                }
+            {
+                genSettings.Width = 20000;
+                genSettings.Length = 20000;
+                genSettings.PointAlgorithm = PointGenerationAlgorithm.CityLike;
+                genSettings.Amount = 16000;
+                break;
+            }
             default:
                 break;
         }
@@ -412,6 +457,7 @@ public class TownGeneratorWindow : EditorWindow
 
     #endregion
 
+    //SHOULD PROBABLY MOVE THIS TO A SEPERATE CLASS/SERVICE
     #region Saving/Loading
 
     /// <summary>
@@ -423,7 +469,6 @@ public class TownGeneratorWindow : EditorWindow
         var filename = Application.dataPath + "/GenerationSettings/" + _saveFile + ExtensionByType(_exportSetting);
 
         //check if the file exists, if it does delete and recreate it
-
         var file = new FileInfo(filename);
         if (file.Exists)
         {
@@ -475,7 +520,6 @@ public class TownGeneratorWindow : EditorWindow
     }
 
     //XML
-
     private void SaveAsXml(string filename)
     {
         //create doc file
@@ -503,17 +547,32 @@ public class TownGeneratorWindow : EditorWindow
 
         genElem.Add(new XElement("Parent", (_townGenerator.Parent != null) ? _townGenerator.Parent.name : string.Empty));
 
+        //Terrain
+        var terrainElem = new XElement("Terrain");
+        var splatmapsElem = new XElement("Splatmaps");
+
+        terrainElem.Add(new XElement("RoadTexture",AssetDatabase.GetAssetPath(_terrainEditor._settings.RoadTexture.Texture),new XAttribute("Tiling",_terrainEditor.GetSettings().RoadTexture.TileSize)));
+
+        int a = 0; 
+        foreach (var splatmap in _terrainEditor.GetSettings().SplatMaps)
+        {
+            var path = AssetDatabase.GetAssetPath(splatmap.Texture);
+            splatmapsElem.Add(new XElement("Splatmap", path, new XAttribute("ID", a), new XAttribute("Tiling", splatmap.TileSize)));
+            a++;
+            
+        }
+
+        terrainElem.Add(splatmapsElem);
+
         //Road Settings
         var roadElem = new XElement("Road");
         roadElem.Add(new XElement("Amount", _roadEditor.Settings.Amount));
         roadElem.Add(new XElement("Max", _roadEditor.Settings.Max));
         roadElem.Add(new XElement("Branches", _roadEditor.Settings.Branches));
 
-        var riverElem = new XElement("River");
-        riverElem.Add(new XElement("Amount", _riverEditor.Settings.Amount));
-        riverElem.Add(new XElement("Max", _riverEditor.Settings.Max));
-        riverElem.Add(new XElement("Branches", _riverEditor.Settings.Branches));
+        var straightPath = AssetDatabase.GetAssetPath(_roadEditor.RoadPrefabs.Straight);
 
+        roadElem.Add(new XElement("Road_Straight", straightPath));
 
         //Prefab settings
         var prefabElem = new XElement("Districts");
@@ -525,6 +584,8 @@ public class TownGeneratorWindow : EditorWindow
 
             districtElement.Add(new XElement("Frequency", districtSetting.Frequency));
             districtElement.Add(new XElement("Size", districtSetting.Size));
+            districtElement.Add(new XElement("Offset", districtSetting.Offset));
+            districtElement.Add(new XElement("Interval", districtSetting.Percentage));
 
             //prefabs
             var buildings = new XElement("Buildings");
@@ -544,12 +605,11 @@ public class TownGeneratorWindow : EditorWindow
         }
 
 
+        //Add all elements to the root
         rootElem.Add(genElem);
+        rootElem.Add(terrainElem);
         rootElem.Add(prefabElem);
         rootElem.Add(roadElem);
-
-        rootElem.Add(riverElem);
-
 
         doc.Add(rootElem);
 
@@ -567,6 +627,7 @@ public class TownGeneratorWindow : EditorWindow
         var district = root.Element("Districts");
         var road = root.Element("Road");
         var river = root.Element("River");
+        var terrain = root.Element("Terrain");
 
         if (generation == null)
             return;
@@ -592,6 +653,29 @@ public class TownGeneratorWindow : EditorWindow
             _townGenerator.Parent = GameObject.Find(parentname);
         }
 
+
+        //Load in terrain settings
+        var splatmaps= new List<SplatTexture>();
+        foreach (var e in terrain.Element("Splatmaps").Elements())
+        {
+            var newSplat = new SplatTexture
+            {
+                Texture = AssetDatabase.LoadAssetAtPath<Texture2D>(e.Value),
+                TileSize = float.Parse(e.Attribute("Tiling").Value)
+            };
+
+
+            splatmaps.Add(newSplat);
+        }
+
+        var roadSplat = new SplatTexture();
+        roadSplat.Texture = AssetDatabase.LoadAssetAtPath<Texture2D>(terrain.Element("RoadTexture").Value);
+        roadSplat.TileSize = float.Parse(terrain.Element("RoadTexture").Attribute("Tiling").Value);
+
+
+        _terrainEditor.GetSettings().RoadTexture = roadSplat;
+        _terrainEditor.GetSettings().SplatMaps = splatmaps;
+        
         //Clear previous loaded districts
         _prefabSelectors.Clear();
         foreach (var districtElem in district.Elements())
@@ -603,6 +687,8 @@ public class TownGeneratorWindow : EditorWindow
             {
                 distictEditor.GetSettings().Frequency = int.Parse(districtElem.Element("Frequency").Value);
                 distictEditor.GetSettings().Size = double.Parse(districtElem.Element("Size").Value);
+                distictEditor.GetSettings().Offset = int.Parse(districtElem.Element("Offset").Value);
+                distictEditor.GetSettings().Percentage = double.Parse(districtElem.Element("Interval").Value);
 
                 //Load in all buildings
                 distictEditor.ResetPrefabs();
@@ -617,14 +703,16 @@ public class TownGeneratorWindow : EditorWindow
         _roadEditor.Settings.Amount = int.Parse(road.Element("Amount").Value);
         _roadEditor.Settings.Branches = int.Parse(road.Element("Branches").Value);
         _roadEditor.Settings.Max = int.Parse(road.Element("Max").Value);
+        if (_roadEditor.RoadPrefabs == null)
+        {
+            _roadEditor.RoadPrefabs = new RoadPrefabs();
+        }
+        
+        _roadEditor.RoadPrefabs.Straight = AssetDatabase.LoadAssetAtPath<GameObject>(road.Element("Road_Straight").Value);
 
-        _riverEditor.Settings.Amount = int.Parse(river.Element("Amount").Value);
-        _riverEditor.Settings.Branches = int.Parse(river.Element("Branches").Value);
-        _riverEditor.Settings.Max = int.Parse(river.Element("Max").Value);
     }
 
     //JSON
-
     private void SaveAsJson(string filename)
     {
     }

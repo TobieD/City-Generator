@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using Helpers;
 
 namespace Voronoi
 {
@@ -98,10 +100,7 @@ namespace Voronoi
 
         #endregion
     }
-
     
-    
-
     /// <summary>
     /// Consists of 2 points
     /// </summary>
@@ -110,9 +109,14 @@ namespace Voronoi
         public Point Start;
         public Point End;
 
-
+        //Voronoi
         public Point Left;
+        public Cell CellLeft;
         public Point Right;
+        public Cell CellRight;
+        public bool bSharedBetweenCells = false;
+
+        //Possible intersection point
         public Point Intersect;
 
         public bool Intersected = false;
@@ -122,7 +126,21 @@ namespace Voronoi
             Start = p1;
             End = p2;
         }
-        #region Operator Overloading
+
+        /// <summary>
+        /// Remove this line from one of the 2 cells
+        /// </summary>
+        public void RemoveSharedLine()
+        {
+            //make it random which cell is chosen?
+            var c = (RandomHelper.RandomBool()) ? CellLeft : CellRight;
+            c = CellLeft;
+
+            c.RemoveLine(this);
+            bSharedBetweenCells = false;
+        }
+
+       #region Operator Overloading
 
         public override int GetHashCode()
         {
@@ -293,6 +311,19 @@ namespace Voronoi
             //Points.Add(l.Point1);
             //Points.Add(l.Point2);
         }
+
+        public void RemoveLine(Line l)
+        {
+            if (Edges.Contains(l))
+            {
+                Edges.Remove(l);
+            }
+        }
+
+        public override string ToString()
+        {
+            return $"Points {Points.Count}, Edges {Edges.Count}";
+        }
     }
 
     internal static class SortAlgorithms
@@ -322,6 +353,8 @@ namespace Voronoi
         public List<Cell> VoronoiCells; //voronoi diagram in Cell format 
         public Dictionary<Point, Cell> SiteCellPoints; //store the cell with their corresponding site
 
+        private List<Cell> _OriginalCells; 
+
         public Rectangle Bounds;
 
         public VoronoiDiagram()
@@ -338,6 +371,18 @@ namespace Voronoi
             HalfEdges.Clear();   
             VoronoiCells.Clear();
             SiteCellPoints.Clear();
+        }
+
+        public void FinishVoronoi()
+        {
+            //Create a copy of the cells
+            //because the city generation cleans up the voronoi cells a second generation with the same cells becomes impossible
+            _OriginalCells = VoronoiCells.ToList();
+        }
+
+        public void RefreshVoronoi()
+        {
+            VoronoiCells = _OriginalCells.ToList();
         }
     }
 }

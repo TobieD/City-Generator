@@ -7,23 +7,23 @@ namespace CityGeneratorWPF.Extensions
     {
         private static Random _rng;
 
-        public static Color RandomColor(bool grayscale = false)
+        public static Color RandomColor(bool grayscale = false, int max = 255)
         {
             if(_rng == null)
                 _rng = new Random(DateTime.Now.GetHashCode());
 
-           return RandomColor_Simple();
+           return RandomColor_Simple(max);
 
         }
 
-        private static Color RandomColor_Simple()
+        private static Color RandomColor_Simple(int max)
         {
 
             var c = new Color
             {
-                R = (byte)(_rng.Next() % 255),
-                G = (byte)(_rng.Next() % 255),
-                B = (byte)(_rng.Next() % 255),
+                R = (byte)(_rng.Next() % max),
+                G = (byte)(_rng.Next() % max),
+                B = (byte)(_rng.Next() % max),
                 A = 255
             };
 

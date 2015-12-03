@@ -32,7 +32,6 @@ namespace Voronoi.Algorithms
 
                 dataPoints[i] = new Vector(point.X,point.Y);
 
-
                 var cell = new Cell {SitePoint = point};
                 _siteCells.Add(point, cell);
             }
@@ -55,31 +54,47 @@ namespace Voronoi.Algorithms
 
         private List<Cell> GenerateCells(VoronoiGraph data)
         {
+            //go over all generated edges
             foreach (var edge in data.Edges)
             {
+                //make sure it is a valid edge
                 if (edge.IsInfinite || edge.IsPartlyInfinite)
                     continue;
 
+                //site point to the left of the edge
                 var pLeft = new Point(edge.LeftData[0],edge.LeftData[1]);
+
+                //site point to the right of the edge
                 var pRight = new Point(edge.RightData[0], edge.RightData[1]);
 
+                //start and end points of the edge
                 var p1 = new Point(edge.VVertexA[0], edge.VVertexA[1]);
                 var p2 = new Point(edge.VVertexB[0], edge.VVertexB[1]);
 
+                //is the sitepoint valid?
                 if (_siteCells.ContainsKey(pLeft) == false || _siteCells.ContainsKey(pRight) == false)
                     continue;
 
+                //Create a line from start till end
                 var line = new Line(p1,p2);
+
+                //Add this line to the left cell and store a reference to the cell to the line
                 _siteCells[pLeft].AddPoint(p1);
                 _siteCells[pLeft].AddPoint(p2);
                 _siteCells[pLeft].AddLine(line);
+                line.CellLeft = _siteCells[pLeft];
 
+                //Add this line to the right cell and store a reference to the cell to the line
                 _siteCells[pRight].AddPoint(p1);
                 _siteCells[pRight].AddPoint(p2);
                 _siteCells[pRight].AddLine(line);
+                line.CellRight = _siteCells[pRight];
+
+                line.bSharedBetweenCells = true;
 
             }
 
+            //Filter out double cells
             _siteCells.Values.ToList().FilterDoubleValues();
             _voronoi.SiteCellPoints = _siteCells;
 
