@@ -1,26 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using Helpers;
 using Voronoi;
 
 namespace CityGenerator
 {
-    //method used for generating roads
-    public enum RoadGenMethod   
-    {
-        Voronoi,
-        Grid
-    }
-
     public class CitySettings
     {
         public List<DistrictSettings> DistrictSettings;
 
-        public RoadGenMethod RoadGenMethod = RoadGenMethod.Grid;
-
         public RoadSettings RoadSettings = new RoadSettings(75,1, 1,"Road");
-        public RoadSettings RiverSettings = new RoadSettings(7,1, 1,"River");
 
-        public bool DebugMode = false;
+        public bool DebugMode = true;
     }
 
     public class DistrictSettings
@@ -69,7 +60,7 @@ namespace CityGenerator
             Branches = branches;
             Type = type;
             Width = width;
-            GenerateInnerRoads = true;
+            GenerateInnerRoads = false;
         }
     }
 
@@ -78,11 +69,8 @@ namespace CityGenerator
         //builder helpers
         private static DistrictBuilder _districtBuilder;
 
-        public static bool UseRandomStartEndPoint = true;
-
         public static CityData GenerateCity(CitySettings settings, VoronoiDiagram voronoi)
         {
-
             if (voronoi.VoronoiCells.Count < 1)
                 return null;
             
@@ -99,6 +87,8 @@ namespace CityGenerator
 
             //divide the city into districts
             cityData.Districts = _districtBuilder.CreateCityDistricts(settings,voronoi);
+
+            cityData.Bounds = MathHelpers.GetCityBounds(cityData);
 
             return cityData;
         }

@@ -112,10 +112,14 @@ namespace CityGeneratorWPF.Service
         /// </summary>
         public void DrawRectangle(Point p,int width, int height,Color c)
         {
+            var halfWidth = width/2;
+            var halfHeigth = height/2;
+
             //Create 3 other points
-            var pWidth =       new Point(p.X + width, p.Y);
-            var pHeight =      new Point(p.X, p.Y + height);
-            var pWidthHeight = new Point(p.X + width, p.Y + height);
+            var pWidth =       new Point(p.X + halfWidth, p.Y - halfHeigth);
+            var pHeight =      new Point(p.X - halfWidth, p.Y + halfHeigth);
+            var pWidthHeight = new Point(p.X + halfWidth, p.Y + halfHeigth);
+            p = new Point(p.X - halfWidth, p.Y - halfHeigth);
 
             //Draw
             DrawLine(p,pWidth,c);
@@ -166,10 +170,9 @@ namespace CityGeneratorWPF.Service
         public void DrawRectangle(Rectangle rect, Color c)
         {
             var p1 = new Point(rect.Left, rect.Top);
-            var p2 = new Point(rect.Left, rect.Bottom);
+            var p2 = new Point(rect.Left, rect.Bottom );
             var p3 = new Point(rect.Right, rect.Bottom);
-            var p4 = new Point(rect.Right, rect.Top);
-
+            var p4 = new Point(rect.Right , rect.Top);
 
             DrawLine(p1, p2, c);
             DrawLine(p2, p3, c);
@@ -270,7 +273,7 @@ namespace CityGeneratorWPF.Service
             foreach (var cell in district.Cells)
             {
                 if(bDrawCells)
-                     DrawCell(cell.Cell, c.GetRandomColorOffset(0.07));
+                     DrawCell(cell, c.GetRandomColorOffset(0.07));
                 else
                 {
                     var cellColor = Color.FromRgb(200, 200, 200);
@@ -296,18 +299,31 @@ namespace CityGeneratorWPF.Service
 
         public void DrawRoad(Road road, Color linecolor, Color startColor, Color endColor, bool drawStartEnd = true, int width = 1)
         {
-                //width = line.Intersected ? width + 1 : width;
-                DrawLine(road.RoadLine,linecolor, width);
+            //width = line.Intersected ? width + 1 : width;
+            DrawLine(road,linecolor, width);
 
             //DrawPoint(road.RoadLine.Start,10,Colors.Red);
             //DrawPoint(road.RoadLine.End, 5, Colors.CornflowerBlue);
 
+            var slope = road.Slope();
 
             var pc = Color.FromRgb(50,50,50);
-            foreach (var p in road.BuildSites)
+            foreach (var building in road.Buildings)
             {
-                DrawPoint(p, 5, pc);
+                DrawPoint(building, 5, pc);
+
+                //Draw bounds of the building
+                //DrawRectangle(building,building.Width,building.Height,pc);
+
+                var halfWidth = (building.Width/2);
+                var halfLength = (building.Height/2);
+
+                var boundX = new Point(building.X - halfWidth, building.Y - halfLength);
+                var boundY = new Point(building.X + halfWidth, building.Y + halfLength);
+
+               //DrawLine(boundY,boundX, pc, 1);
             }
          }
+
     }
 }

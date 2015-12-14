@@ -269,11 +269,15 @@ namespace Voronoi
         /// the points that create the edges of the cell
         /// </summary>
         public List<Point> Points;
+
         /// <summary>
         ///the point that the cell is build around
         /// /// </summary>
         public Point SitePoint;
 
+        /// <summary>
+        /// Borders of the cell
+        /// </summary>
         public List<Line> Edges; 
 
         public Cell()

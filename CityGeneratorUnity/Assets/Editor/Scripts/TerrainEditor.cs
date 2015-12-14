@@ -33,6 +33,8 @@ namespace Assets.Editor.Scripts
 
 
             _settings.TerrainHeight = (int)EditorGUILayout.Slider("Terrain Height", _settings.TerrainHeight, 16.0f, 1024.0f);
+            _settings.TerrainScaleFactor = UnityEditor.EditorGUILayout.IntSlider("Scale", _settings.TerrainScaleFactor,
+                1, 10);
            // _settings.HeightmapSize = (int)EditorGUILayout.Slider("Heightmap Size", _settings.HeightmapSize, 256.0f, 2048.0f);
 
             _useSeed = EditorGUILayout.Toggle("Use Seed", _useSeed);
@@ -45,10 +47,10 @@ namespace Assets.Editor.Scripts
 
             _settings.GroundFrequency = EditorGUILayout.Slider("Ground Frequency", _settings.GroundFrequency,0,5000.0f);
             _settings.MountainFrequency = EditorGUILayout.Slider("Mountain Frequency", _settings.MountainFrequency,0,5000.0f);
+            _settings.TreeFrequency = EditorGUILayout.Slider("Tree Frequency", _settings.TreeFrequency, 0, 5000.0f);
 
             //Textures
             EditorGUILayout.LabelField("Splatmaps", EditorStyles.boldLabel);
-
             TextureEdit(_settings.RoadTexture,"Road texture");
 
             if (GUILayout.Button("+"))
@@ -62,6 +64,20 @@ namespace Assets.Editor.Scripts
             foreach (var map in _settings.SplatMaps)
             {
                 TextureEdit(map);
+            }
+
+            //Trees
+            EditorGUILayout.LabelField("Trees", EditorStyles.boldLabel);
+
+            if (GUILayout.Button("+"))
+            {
+                _settings.Trees.Add(null);
+            }
+
+            for(int i = 0; i < _settings.Trees.Count; ++i)
+            {
+
+                _settings.Trees[i] = (GameObject)EditorGUILayout.ObjectField(_settings.Trees[i], typeof(GameObject), false);
             }
 
 
@@ -105,5 +121,7 @@ namespace Assets.Editor.Scripts
             texture.TileSize = EditorGUILayout.FloatField("Tiling", texture.TileSize);
             EditorGUILayout.EndHorizontal();
         }
+
+        
     }
 }

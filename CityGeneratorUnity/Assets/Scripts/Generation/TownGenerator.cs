@@ -28,7 +28,7 @@ public class TownGenerator:Singleton<TownGenerator>
     private bool _bCanBuild = false;
 
     //Terrain Generator is used for roads
-    private TerrainGenerator _terrainGenerator;
+    public TerrainGenerator TerrainGenerator;
 
     //Library generated data
     private CityData _cityData;
@@ -41,10 +41,19 @@ public class TownGenerator:Singleton<TownGenerator>
 
     private List<GameObject> _zoneObjects = new List<GameObject>();
 
+    public TerrainData TerrainData
+    {
+        get { return TerrainGenerator.TerrainData; }
+    }
+    public Terrain Terrain
+    {
+        get { return TerrainGenerator.Terrain; }
+    }
+
     public TownGenerator()
     {
         //Create the terrainGenerator
-        _terrainGenerator = new TerrainGenerator();
+        TerrainGenerator = new TerrainGenerator();
     }
 
     /// Generates a voronoi diagram as a basic layout of the town
@@ -65,7 +74,7 @@ public class TownGenerator:Singleton<TownGenerator>
         }
         
         //Generate terrain
-        _terrainGenerator.BuildTerrain(GenerationSettings, terrainSettings, Parent);
+        TerrainGenerator.BuildTerrain(GenerationSettings, terrainSettings, Parent);
 
         //Generate the city
         GenerateCity();
@@ -86,16 +95,16 @@ public class TownGenerator:Singleton<TownGenerator>
             Debug.LogWarning("CityGenerator: Unable to build city. \nPlease generate data first!");
             return;
         }
-
-        _terrainGenerator.ApplyRoadData(_cityData);
-
+        
         //Build houses
         foreach (var zoneObject in _zoneObjects) 
         {
             zoneObject.GetComponent <TownZone>().Build();
         }
 
-        
+        //build trees, roads,...
+        TerrainGenerator.PopulateTerrain(_cityData);
+
     }
 
     public void Clear()
@@ -160,6 +169,28 @@ public class TownGenerator:Singleton<TownGenerator>
             }
         }
 
+        ////Voronoi border
+        ////only add line renderer when the gameobject doesn't have it yet
+        //var line = Parent.AddComponent<LineRenderer>();
+        ////Load the material and change color based on zone type
+        //var mat = Resources.Load<Material>("Material/VoronoiBorder");
+
+        ////Add line renderer
+        //line.enabled = true;
+        //line.SetVertexCount(4);
+        //line.material = mat;
+
+        //float x = (float)GenerationSettings.StartX;
+        //float y = (float)GenerationSettings.StartY;
+        //float width = (float)GenerationSettings.Width;
+        //float height = (float)GenerationSettings.Length;
+
+        //line.SetPosition(0,new Vector3(x, 0, y));
+        //line.SetPosition(1, new Vector3(x + width, 0, y));
+        //line.SetPosition(2, new Vector3(x + width, 0, y + height));
+        //line.SetPosition(3, new Vector3(x, 0, y + height));
+
+
 
     }
 
@@ -168,12 +199,21 @@ public class TownGenerator:Singleton<TownGenerator>
         //Create simple game object
         var newGameObj = new GameObject(name);
         newGameObj.transform.parent = parent.transform;
-        newGameObj.transform.position = cell.Cell.SitePoint.ToVector3();
+        newGameObj.transform.position = cell.SitePoint.ToVector3();
 
         //Add town Zone Component
         var townZone = newGameObj.AddComponent<TownZone>();
 
-        townZone.SetZoneData(cell);
+        DistrictSettings settings = null;
+        foreach (var districtSettings in CitySettings.DistrictSettings)
+        {
+            if (districtSettings.Type == cell.DistrictType)
+            {
+                settings = districtSettings;
+            }
+        }
+
+        townZone.SetZoneData(cell,settings);
 
         _zoneObjects.Add(newGameObj);
     }

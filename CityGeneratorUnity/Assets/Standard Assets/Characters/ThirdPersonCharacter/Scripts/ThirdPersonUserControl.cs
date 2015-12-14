@@ -37,9 +37,9 @@ namespace UnityStandardAssets.Characters.ThirdPerson
             m_Character = GetComponent<ThirdPersonCharacter>();
 
             //make the character spawn on a road
-            var road = GameObject.FindGameObjectsWithTag("Road").GetRandomValue().transform.position;
+            //var road = GameObject.FindGameObjectsWithTag("Road").GetRandomValue().transform.position;
 
-            transform.position = road;
+            //transform.position = road;
         }
 
 

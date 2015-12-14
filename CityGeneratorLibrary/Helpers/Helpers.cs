@@ -139,6 +139,12 @@ namespace Helpers
 
         #region Line
 
+
+        public static double Slope(this Line l)
+        {
+            return (l.End.Y - l.Start.Y)/(l.End.X - l.Start.X);
+        }
+
         /// <summary>
         /// Find the line perpendicular with a given line in a given point
         /// </summary>
@@ -292,10 +298,52 @@ namespace Helpers
                 || (a.IsPointRightOfLine(b.Start) ^ a.IsPointRightOfLine(b.End));
         }
 
+        public static Point GeneratePerpendicularPointOnLine(this Line l, Point c, double offset)
+        {
+            var p  = Point.Zero;
+            var x1 = l.Start.X;
+            var y1 = l.Start.Y;
+            var x2 = l.End.X;
+            var y2 = l.End.Y;
+
+
+
+            return p;
+        }
+
+        public static Line GenerateOffsetParallel(this Line line, int offset = 20, bool bLeft = true)
+        {
+            var x1 = line.Start.X;
+            var y1 = line.Start.Y;
+            var x2 = line.End.X;
+            var y2 = line.End.Y;
+
+            var l = Math.Sqrt(Power(x1 - x2) + Power(y1 - y2));
+
+            offset *= (bLeft) ? 1 : -1;
+
+            var p3 = new Point(x1 + offset * (y2 - y1) / l, y1 + offset * (x1 - x2) / l);
+            var p4 = new Point(x2 + offset * (y2 - y1) / l, y2 + offset * (x1 - x2) / l);
+
+            return new Line(p3, p4);
+        }
+
+        public static Line GenerateOffsetParallelTowardsPoint(this Line line, int offset, Point focusPoint)
+        {
+            //generate both left and right offset line and take the centers
+            var l = line.GenerateOffsetParallel(offset, true);
+            var r = line.GenerateOffsetParallel(offset, false);
+            
+            //return the line that is closest to the focus pint
+            return (DistanceBetweenPoints(l.Center(), focusPoint) < DistanceBetweenPoints(r.Center(), focusPoint))
+                ? l
+                : r;
+        }
+
         /// <summary>
         /// Create random points near a line based on an offset and a division on the inside of the cell
         /// </summary>
-        public static List<Point> GeneratePointsNearLineOfCell(this Line line,Cell cell, double percentage, int offset,bool twoSided = false)
+        public static List<Point> GeneratePointsNearLineTowardsPoint(this Line line,Point p, double percentage, int offset,bool twoSided = false)
         {
             var points = new List<Point>();
             var p1X = line.Start.X;
@@ -323,10 +371,6 @@ namespace Helpers
 
             double max = 1.0;
 
-            bool bLeftIsInner = true;
-
-            //determine the line that is inside the cell
-
             //take the center of the left and right line
             var leftCenter = left.Center();
             var rightCenter = right.Center();
@@ -334,8 +378,8 @@ namespace Helpers
             //take the distance from left to cell sitepoint and right to cell sitepoint
             //line with the least distance is on the inside
 
-            var leftDis = DistanceBetweenPoints(leftCenter, cell.SitePoint);
-            var rightDis = DistanceBetweenPoints(rightCenter, cell.SitePoint);
+            var leftDis = DistanceBetweenPoints(leftCenter, p);
+            var rightDis = DistanceBetweenPoints(rightCenter, p);
 
             var innerLine = (leftDis < rightDis) ? left : right;
 
@@ -997,6 +1041,41 @@ namespace Helpers
             return p;
         }
 
+        public static Rectangle GetCityBounds(CityData city)
+        {
+            double maxX = 0;
+            double minX = double.MaxValue;
+            double maxY = 0;
+            double minY = double.MaxValue;
+
+            //go over all cells and their edgepoints to find the bounds
+            foreach (var district in city.Districts)
+            {
+                foreach (var cell in district.Cells)
+                {
+                    foreach (var point in cell.Points)
+                    {
+                        var x = point.X;
+                        var y = point.Y;
+
+                        if (x > maxX)
+                            maxX = x;
+
+                        if (x < minX)
+                            minX = x;
+
+                        if (y > maxY)
+                            maxY = y;
+
+                        if (y < minY)
+                            minY = y;
+                    }
+                }
+            }
+
+            return new Rectangle(minX, minY, maxX - minX, maxY - minY);
+        }
+
         #endregion
 
     }
@@ -1005,7 +1084,7 @@ namespace Helpers
     {
         public static void SortBySmallestLength(this IList<Road> l)
         {
-            l = l.OrderBy(x => x.RoadLine.Length()).ToList();
+            l = l.OrderBy(x => x.Length()).ToList();
         }
     }
 }

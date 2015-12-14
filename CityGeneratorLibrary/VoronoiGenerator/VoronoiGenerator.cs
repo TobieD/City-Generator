@@ -24,18 +24,18 @@ namespace Voronoi
         // Bounds
         public double StartX = 0;
         public double StartY = 0;
-        public double Width = 2500;
-        public double Length = 2500;
+        public double Width = 150;
+        public double Length = 150;
         
         // Amount of points to spawn
-        public int Amount = 500;
+        public int Amount = 20;
 
         public bool UseCircle = false;
         public double CircleRadius = 25;
 
 
         // Algorithms to use
-        public VoronoiAlgorithm VoronoiAlgorithm = VoronoiAlgorithm.BoywerWatson;
+        public VoronoiAlgorithm VoronoiAlgorithm = VoronoiAlgorithm.Fortune;
         public PointGenerationAlgorithm PointAlgorithm = PointGenerationAlgorithm.Simple;
     }
 
@@ -75,7 +75,14 @@ namespace Voronoi
             }
 
 
+
+           
+
             voronoi.Bounds = new Rectangle(startX, startY, width, length);
+
+
+
+
             voronoi.Sites = points;
 
             voronoi.FinishVoronoi();

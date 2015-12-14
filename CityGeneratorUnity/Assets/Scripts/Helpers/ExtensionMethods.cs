@@ -34,6 +34,10 @@ public static class ExtensionMethods
     public static Vector3 GetPrefabBounds(this GameObject prefab)
     {
         //Have to create the prefab
+
+        if(prefab == null)
+            return Vector3.one;
+
         var instance = (GameObject) Object.Instantiate(prefab);
 
         //Get Actual size of the prefab

@@ -150,7 +150,7 @@ public class TownGeneratorWindow : EditorWindow
         ZonePrefabSelection();
 
         //River Settings
-        RoadRiverSettings();
+        //RoadRiverSettings();
 
         //Draw Buttons
         GenerationButtons();
@@ -196,7 +196,6 @@ public class TownGeneratorWindow : EditorWindow
             return;
         }
 
-
         EditorGUI.indentLevel++;
 
         //SEED
@@ -219,8 +218,9 @@ public class TownGeneratorWindow : EditorWindow
         _showAdvancedSettings = EditorGUILayout.Toggle("Advanced Settings", _showAdvancedSettings);
         if (_showAdvancedSettings)
         {
-            
             //GUILayout.Label("Generation bounds", EditorStyles.boldLabel);
+            _roadEditor.Settings.GenerateInnerRoads = EditorGUILayout.Toggle("Generate Inner Roads",
+                _roadEditor.Settings.GenerateInnerRoads);
             //Width and Height
             _generationSettings.Width = EditorGUILayout.IntField("Width", (int) _generationSettings.Width);
             _generationSettings.Length = EditorGUILayout.IntField("Length", (int) _generationSettings.Length);
@@ -533,18 +533,13 @@ public class TownGeneratorWindow : EditorWindow
 
         genElem.Add(new XElement("UseSeed", _generationSettings.UseSeed));
         genElem.Add(new XElement("Seed", _generationSettings.Seed));
-
         genElem.Add(new XElement("Width", _generationSettings.Width));
         genElem.Add(new XElement("Length", _generationSettings.Length));
-
         genElem.Add(new XElement("StartX", _generationSettings.StartX));
         genElem.Add(new XElement("StartY", _generationSettings.StartY));
-
         genElem.Add(new XElement("Amount", _generationSettings.Amount));
-
         genElem.Add(new XElement("Point", (int) _generationSettings.PointAlgorithm));
         genElem.Add(new XElement("Voronoi", (int) _generationSettings.VoronoiAlgorithm));
-
         genElem.Add(new XElement("Parent", (_townGenerator.Parent != null) ? _townGenerator.Parent.name : string.Empty));
 
         //Terrain
@@ -562,7 +557,16 @@ public class TownGeneratorWindow : EditorWindow
             
         }
 
+        var treeElem = new XElement("Trees");
+        foreach (var treePrefab in _terrainEditor.GetSettings().Trees)
+        {
+            var path = AssetDatabase.GetAssetPath(treePrefab);
+            treeElem.Add(new XElement("Tree",path));
+
+        }
+
         terrainElem.Add(splatmapsElem);
+        terrainElem.Add(treeElem);
 
         //Road Settings
         var roadElem = new XElement("Road");
@@ -626,7 +630,6 @@ public class TownGeneratorWindow : EditorWindow
         var generation = root.Element("Generation");
         var district = root.Element("Districts");
         var road = root.Element("Road");
-        var river = root.Element("River");
         var terrain = root.Element("Terrain");
 
         if (generation == null)
@@ -663,9 +666,14 @@ public class TownGeneratorWindow : EditorWindow
                 Texture = AssetDatabase.LoadAssetAtPath<Texture2D>(e.Value),
                 TileSize = float.Parse(e.Attribute("Tiling").Value)
             };
-
-
             splatmaps.Add(newSplat);
+        }
+
+        var trees = new List<GameObject>();
+        foreach (var e in terrain.Elements("Trees").Elements())
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(e.Value);
+            trees.Add(prefab);
         }
 
         var roadSplat = new SplatTexture();
@@ -675,6 +683,7 @@ public class TownGeneratorWindow : EditorWindow
 
         _terrainEditor.GetSettings().RoadTexture = roadSplat;
         _terrainEditor.GetSettings().SplatMaps = splatmaps;
+        _terrainEditor.GetSettings().Trees = trees;
         
         //Clear previous loaded districts
         _prefabSelectors.Clear();

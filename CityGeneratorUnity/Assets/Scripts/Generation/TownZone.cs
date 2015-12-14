@@ -11,6 +11,7 @@ public class TownZone : MonoBehaviour
     public string ZoneType;
 
     private List<GameObject> _prevSpawnedGameObjects = new List<GameObject>();
+    private DistrictSettings _settings;
 
     public bool bDrawBounds = false;
 
@@ -21,10 +22,11 @@ public class TownZone : MonoBehaviour
         bDrawBounds = true;
     }
 
-    public void SetZoneData(DistrictCell cell)
+    public void SetZoneData(DistrictCell cell,DistrictSettings settings)
     {
         _cell = cell;
         ZoneType = _cell.DistrictType;
+        _settings = settings;
 
         DrawBounds();
     }
@@ -45,7 +47,9 @@ public class TownZone : MonoBehaviour
         if (bDrawBounds)
             DrawBounds();
         else
+        {
             DestroyImmediate(_zoneObject);
+        }
 
         //clear debug lines of previous build
         DebugLines.Clear();
@@ -56,12 +60,12 @@ public class TownZone : MonoBehaviour
         {
             DestroyImmediate(bgo);
         }
-        
+
         //load prefabs for the type and make sure there are prefabs set
         var prefabs = GetPrefabsForType(ZoneType);
         if (prefabs.Count < 1)
         {
-            Debug.LogWarningFormat("No prefab buildings set for {0}!\nPlease add building prefabs.", _cell.DistrictType);
+            //Debug.LogWarningFormat("No prefab buildings set for {0}!\nPlease add building prefabs.", _cell.DistrictType);
             return;
         }
 
@@ -69,6 +73,7 @@ public class TownZone : MonoBehaviour
         //Change roads to be build in the terrain using textures
         for (int i = 0; i < _cell.Roads.Count; ++i)
         {
+            //Generate a road GameObject
             var road = _cell.Roads[i];
             var objectName = string.Format("road_{0}",i +1);
             
@@ -79,23 +84,44 @@ public class TownZone : MonoBehaviour
                 continue;
             }
 
-            //continue;
-            //Generate the buildings on the road
-            for (int x = 0; x < road.BuildSites.Count; ++x)
+            //The Building generation per road needs to be done knowing information about the prefab
+            int offset = _settings.Offset;
+
+            offset = 5;
+            int minDistance = 4;
+            int index = 0;
+
+            //0. Get the offset line from this road towards the center of the cell
+            Line offsetLine = road.GenerateOffsetParallelTowardsPoint(offset, _cell.SitePoint);
+
+            //1. Calculate the total length of the line
+            double totalLength = offsetLine.Length();
+            double lengthTraveled = minDistance * 2;
+
+            //keep repeating until the end is reached
+            while (lengthTraveled < totalLength - minDistance) 
             {
-                //Convert the 2D point to 3D
-                var position = road.BuildSites[x];
+                //3. get point on line using normalized values [0,1]
+                var pc = lengthTraveled / totalLength;
+                var p = offsetLine.FindRandomPointOnLine(pc, pc);
 
-                objectName = string.Format("building_{0}", x + 1);
+                //4.Create q building site from this point
+                var bs = BuildingSite.FromPoint(p);
 
-                //Select a random prefab from the list
+                //Place the building in the world
                 var prefab = prefabs.GetRandomValue();
+                objectName = string.Format("building_{0}", index + 1);
+                GenerateBuildingFromPrefab(prefab,objectName,p,road,roadObject);
 
-                //Generate a building using the prefab
-                GenerateBuildingFromPrefab(prefab,objectName,position,road, roadObject);
+                var prefabBounds = prefab.GetPrefabBounds();
+                bs.Width = (int)prefabBounds.x + minDistance;
+                bs.Height = (int)prefabBounds.z;
+
+                //5. travel along the line using the width of the building site
+                lengthTraveled += (minDistance + prefabBounds.x);
+
+                _cell.Roads[i].Buildings.Add(bs);
             }
-
-            //break;
         }
     }
 
@@ -109,13 +135,11 @@ public class TownZone : MonoBehaviour
         //Create mesh to visualize the bounds of the zone
         _zoneObject = new GameObject("ZoneVisual");
 
-        DrawBounds();
-
         _zoneObject.transform.parent = transform;
 
         var x = transform.position.x;
-        var y = transform.position.y;
         var z = transform.position.z + 75;
+        var y = transform.position.y;
         _zoneObject.transform.position = new Vector3(x,y,z);
 
         //only add line renderer when the gameobject doesn't have it yet
@@ -130,15 +154,15 @@ public class TownZone : MonoBehaviour
         //Add line renderer
         var line = _zoneObject.AddComponent<LineRenderer>();
         line.enabled = true;
-        line.SetVertexCount(_cell.Cell.Points.Count);
+        line.SetVertexCount(_cell.Points.Count);
         line.material = mat;
 
         //create all the points of the line
         int i = 0;
-        foreach (var point in _cell.Cell.Points)
+        foreach (var point in _cell.Points)
         {
             var pos = point.ToVector3();
-            //pos.z = z;
+            pos.y = TownGenerator.GetInstance().Terrain.SampleHeight(new Vector3(pos.x, 0, pos.z)) + 10;
             line.SetPosition(i, pos);
             i++;
         }
@@ -146,52 +170,19 @@ public class TownZone : MonoBehaviour
 
     private GameObject GenerateRoad(Road r, string roadName)
     {
-        //start and end of the road
-        
-        var start = r.RoadLine.Start.ToVector3();
-        var end = r.RoadLine.End.ToVector3();
-
-        //Use prefab tiles of roads to make it look more pretty
-        var prefab = TownGenerator.GetInstance().RoadPrefabs.Straight;
-
-        //Calculate how many times the road prefab needs to be spawned
-        var length = Vector3.Distance(start, end);
-        var bounds = prefab.GetPrefabBounds();
-        //int amountOfSpawns = Mathf.RoundToInt(length / bounds.x);
-
+        var start = r.Start.ToVector3();
 
         //Create parent road object
         var road = new GameObject(roadName);
         road.tag = "Road"; //tag it for demo use
         road.transform.position = start;
         road.transform.parent = transform;
-        
+
         //Add for manual cleanup
         _prevSpawnedGameObjects.Add(road);
 
         return road;
-
-        //var roadObj = new GameObject("Road");
-
-        //roadObj.transform.parent = road.transform;
-        ////Keep instantiating the prefab until the end of the line is reached
-        ////TODO: Special cases for where lines intersect
-        //for (int i = 1; i < amountOfSpawns; i++)
-        //{
-        //    var pos = start;
-        //    pos.x += (bounds.x*i);
-        //    pos.z += bounds.z;
-
-        //    var instance = (GameObject)Instantiate(prefab,pos,Quaternion.identity);
-
-        //    instance.transform.parent = roadObj.transform;
-        //}
-
-        ////Rotate the parent road
-        //road.transform.rotation = Quaternion.FromToRotation(Vector3.right, end - start);
-
-       
-    }
+     }
 
     /// <summary>
     /// Generate a building on a road using a prefab
@@ -203,16 +194,25 @@ public class TownZone : MonoBehaviour
     private void GenerateBuildingFromPrefab(GameObject prefab, string objectName, Point pos ,Road parentRoad, GameObject road)
     {
         //Make the building face the road, make a perpendicular line from the building pos to the road
-        var lookAtPos = parentRoad.RoadLine.FindPerpendicularPointOnLine(pos);
+        var lookAtPos = parentRoad.FindPerpendicularPointOnLine(pos);
 
+        var t = TownGenerator.GetInstance().Terrain;
         //Instantiate the prefab at the location       
-        var buildingObject = (GameObject)Instantiate(prefab, pos.ToVector3(), prefab.transform.rotation);
+
+        var position = pos.ToVector3();
+        position.y = t.SampleHeight(position);
+
+        var lookat = lookAtPos.ToVector3();
+
+        lookat.y = position.y;
+        //lookAtPos.Y = position.y;
+        var buildingObject = (GameObject)Instantiate(prefab, position, prefab.transform.rotation);
 
         //Debug Only
         DebugLines.Add(new Line(pos,lookAtPos));
 
         //Look at the point
-        buildingObject.transform.LookAt(lookAtPos.ToVector3());
+        buildingObject.transform.LookAt(lookat);
 
         //Flip on Y
         buildingObject.transform.RotateAround(pos.ToVector3(),transform.up,180);
@@ -227,10 +227,16 @@ public class TownZone : MonoBehaviour
 
     public void OnDrawGizmosSelected()
     {
-        Gizmos.color = Color.blue;
+        Gizmos.color = Color.green;
         foreach (var debugLine in DebugLines)
         {
-            Gizmos.DrawLine(debugLine.Start.ToVector3(), debugLine.End.ToVector3());
+            var s = debugLine.Start.ToVector3();
+            s.y = TownGenerator.GetInstance().Terrain.SampleHeight(s);
+
+            var e = debugLine.End.ToVector3();
+            e.y = TownGenerator.GetInstance().Terrain.SampleHeight(e);
+
+            Gizmos.DrawLine(s,e);
         }
     }
 

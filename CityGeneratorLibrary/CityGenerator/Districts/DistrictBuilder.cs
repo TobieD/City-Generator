@@ -15,11 +15,13 @@ namespace CityGenerator
     {
         private List<DistrictCell> _districtCells;
         private BowyerWatsonGenerator _triangulator = new BowyerWatsonGenerator();
-        private RoadBuilder _roadBuilder = new RoadBuilder();
 
+
+        //helpers for building roads
+        private readonly RoadBuilder _roadBuilder = new RoadBuilder();
         private RoadSettings _roadSettings;
 
-        private bool bEnableDebugMode = false;
+        private bool bEnableDebugMode = true;
 
         public List<District> CreateCityDistricts(CitySettings settings,VoronoiDiagram voronoi)
         {
@@ -38,52 +40,54 @@ namespace CityGenerator
             var district = new District {DistrictType = settings.Type };
             var buildpoints = new List<Point>();
 
-            //find all cells with the corresponding district type
+            //sort all cells by their district type
+            //and generate the roads
+            //and generate the building sites
             foreach (var dc in _districtCells)
             {
+                //sort by type
                 if (dc.DistrictType != district.DistrictType)
                 {
                     continue;
                 }
                 
+                //add the cell
                 district.Cells.Add(dc);
 
                 //generate roads inside the district cell
                 dc.Roads = _roadBuilder.BuildRoad(_roadSettings, dc);
 
-                if (dc.Roads.Count < 1)
-                {
-                    continue;
-                }
+                //Because the width of the building needs to be know the building site generation needs to be done in unity
+                continue;
 
-                dc.Roads.SortBySmallestLength();
-
-                //Generate build sites near the generated roads starting from the smallest line
-                var percentage = settings.Percentage/100;
-
-                //the first entry is always the shortest
-                var shortest = dc.Roads[0].RoadLine;
-                var p = shortest.FindRandomPointOnLine(percentage, percentage);
-
-                //make sure the distance between building points is always equal to this
-                var uniformDistanceBetweenPoints = MathHelpers.DistanceBetweenPoints(shortest.Start, p);
-
+                double minDistance = 2;
+                
                 //Generate build points for every road inside the district cell
                 foreach (var road in dc.Roads)
                 {
-                    var length = road.RoadLine.Length();
+                    //0. Get the offset line from this road towards the center of the cell
+                    Line offsetLine = road.GenerateOffsetParallelTowardsPoint(settings.Offset, dc.SitePoint);
 
-                    var pc = uniformDistanceBetweenPoints / length;
+                    //1. Calculate the total length of the line
+                    double totalLength = offsetLine.Length();
+                    double lengthTraveled = minDistance*2;
 
-                    //the points will be generated with a specified interval and a specified offset from the road
-                    road.BuildSites.AddRange(road.RoadLine.GeneratePointsNearLineOfCell(dc.Cell,pc, settings.Offset));
-                    buildpoints.AddRange(road.BuildSites);
+                    //keep repeating until the end is reached
+                    while (lengthTraveled < totalLength)
+                    {
+                        //3. get point on line using normalized values [0,1]
+                        var pc = lengthTraveled/totalLength;
+                        var p = offsetLine.FindRandomPointOnLine(pc, pc);
 
+                        //4.Create q building site from this point
+                        var bs = BuildingSite.FromPoint(p);
+                        road.Buildings.Add(bs);
+
+                        //5. travel along the line using the width of the building site
+                        lengthTraveled += (minDistance + bs.Width );
+                    }
                 }
-                
-                //Only create one cell
-                if(bEnableDebugMode)
-                    break;
+
             }
 
             return district;
@@ -95,21 +99,16 @@ namespace CityGenerator
             bEnableDebugMode = settings.DebugMode;
 
             //Create a district cell from the voronoi cells
-            var cells = voronoi.GetCellsInBounds();
-            //var districtCells = cells.Select(cell => new DistrictCell(settings.DistrictSettings[0].Type, cell)).ToList();
-
-
             var districtCells = new List<DistrictCell>();
-
-            foreach (var cell in cells)
+            foreach (var cell in voronoi.GetCellsInBounds())
             {
-
+                //ignore cells that are not valid
                 if (cell.Edges.Count < 2)
                 {
                     continue;
                 }
 
-                districtCells.Add(new DistrictCell(settings.DistrictSettings[0].Type,cell));
+                districtCells.Add(DistrictCell.FromCell(cell,settings.DistrictSettings[0].Type));
             }
 
 
@@ -142,10 +141,10 @@ namespace CityGenerator
             foreach (var cell in cells)
             {
                 //get cell center
-                var cellCenter = cell.Cell.SitePoint;
+                var cellCenter = cell.SitePoint;
 
                 //Calculate distance between current cell and the start cell
-                var distance = MathHelpers.DistanceBetweenPoints(startCell.Cell.SitePoint, cellCenter);
+                var distance = MathHelpers.DistanceBetweenPoints(startCell.SitePoint, cellCenter);
 
                 //if it is within range add the cell
                 if (distance < radius)

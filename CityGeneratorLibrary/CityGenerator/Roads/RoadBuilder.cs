@@ -16,7 +16,7 @@ namespace CityGenerator
         public List<Road> BuildRoad(RoadSettings roadSettings,DistrictCell cell)
         {
             //Edges are the bounds of the road and will be part of the road as well
-            var edges = cell.Cell.Edges.ToList();
+            var edges = cell.Edges.ToList();
 
             //find the longest line in the cell as a start line
             var longest = FindLongestLineInCell(edges);
@@ -24,17 +24,17 @@ namespace CityGenerator
             //a cell edge can be shared so first remove the line from one of the shared cells
             //all edges of the cell are part of the road
             var roads = new List<Road>();
-            foreach (var edge in cell.Cell.Edges)
+            foreach (var edge in cell.Edges)
             {
                 //add the original side edge
-                roads.Add(new Road(edge));
+                roads.Add(Road.FromLine(edge));
             }
 
 
             if (roadSettings.GenerateInnerRoads)
             {
                 //Create all the parts of the road
-                roads.AddRange(GenerateRoad(roads, new Road(longest.Key), new Road(longest.Value), roadSettings.Branches));
+                roads.AddRange(GenerateRoad(roads, Road.FromLine(longest.Key), Road.FromLine(longest.Value), roadSettings.Branches));
             }
 
             return roads;
@@ -49,8 +49,8 @@ namespace CityGenerator
             //find a new start and end point
             const double min = 0.33;
             const double max = 1 - min;
-            var start = startLine.RoadLine.FindRandomPointOnLine(min, max);
-            var end = endLine.RoadLine.Center();
+            var start = startLine.FindRandomPointOnLine(min, max);
+            var end = endLine.Center();
 
             //When an intersection occurs break the line     
             HandlePossibleRoadIntersections(new Line(start,end),startLine,endLine, roads);
@@ -120,7 +120,7 @@ namespace CityGenerator
             //has to be reverse because otherwise the lines will intersect with the edges
             for(var i = roads.Count-1; i> 0; i--)
             {
-                var l = roads[i].RoadLine;
+                var l = roads[i];
 
                 //if the line intersects
                 if (!line.IntersectsWith(l)) continue;
@@ -143,26 +143,7 @@ namespace CityGenerator
             }
 
             //Add the new road
-            roads.Add(new Road(line));
-
-            return;
-
-            //remove the road that was intersected(endline) with
-            roads.Remove(endLine);
-            roads.Remove(startLine);
-
-
-
-            //split start line
-            var splitStart = SplitLine(startLine.RoadLine, line.Start);
-            roads.Add(new Road(splitStart.Key));
-            roads.Add(new Road(splitStart.Value));
-
-            var splitEnd = SplitLine(endLine.RoadLine, line.End);
-            roads.Add(new Road(splitEnd.Key));
-            roads.Add(new Road(splitEnd.Value));
-
-
+            roads.Add(Road.FromLine(line));
         }
 
         private Line CreateIntersectedLine(Line newLine,Point ip, ref bool flipped)

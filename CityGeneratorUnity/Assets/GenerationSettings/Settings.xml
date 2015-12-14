@@ -2,42 +2,45 @@
 <Settings>
   <Generation>
     <UseSeed>false</UseSeed>
-    <Seed>-1619224536</Seed>
-    <Width>500</Width>
-    <Length>500</Length>
-    <StartX>0</StartX>
-    <StartY>0</StartY>
-    <Amount>20</Amount>
+    <Seed>551079663</Seed>
+    <Width>150</Width>
+    <Length>150</Length>
+    <StartX>-75</StartX>
+    <StartY>-75</StartY>
+    <Amount>45</Amount>
     <Point>0</Point>
     <Voronoi>1</Voronoi>
     <Parent>Town</Parent>
   </Generation>
   <Terrain>
-    <RoadTexture Tiling="2">Assets/Resources/Textures/Street.png</RoadTexture>
+    <RoadTexture Tiling="2">Assets/Resources/rock.png</RoadTexture>
     <Splatmaps>
-      <Splatmap ID="0" Tiling="2">Assets/Resources/Textures/Grass.png</Splatmap>
-      <Splatmap ID="1" Tiling="2">Assets/Resources/Textures/Sand.png</Splatmap>
-      <Splatmap ID="2" Tiling="2">Assets/Resources/Textures/Grass.png</Splatmap>
-      <Splatmap ID="3" Tiling="2">Assets/Resources/Textures/Snow.png</Splatmap>
+      <Splatmap ID="0" Tiling="2">Assets/Resources/grass_normal.png</Splatmap>
+      <Splatmap ID="1" Tiling="2">Assets/Resources/grass_dark.png</Splatmap>
+      <Splatmap ID="2" Tiling="2">Assets/Resources/rock.png</Splatmap>
+      <Splatmap ID="3" Tiling="2">Assets/Resources/sand.png</Splatmap>
     </Splatmaps>
+    <Trees>
+      <Tree>Assets/Resources/Prefabs/Tree01.prefab</Tree>
+      <Tree>Assets/Resources/Prefabs/Tree02.prefab</Tree>
+    </Trees>
   </Terrain>
   <Districts>
-    <Grass>
+    <Urban>
       <Frequency>2</Frequency>
       <Size>0.5</Size>
-      <Offset>5</Offset>
-      <Interval>10</Interval>
+      <Offset>7</Offset>
+      <Interval>18</Interval>
       <Buildings>
-        <Building ID="0">Assets/Store Assets/SimpleTownLite/_Prefabs/Building_PizzaShop.prefab</Building>
-        <Building ID="1">Assets/Store Assets/SimpleTownLite/_Prefabs/Building_Apartment.prefab</Building>
-        <Building ID="2">Assets/Store Assets/SimpleTownLite/_Prefabs/store_small_drug.prefab</Building>
+        <Building ID="0">Assets/Store Assets/SimpleTownLite/_Prefabs/Building_Apartment.prefab</Building>
+        <Building ID="1">Assets/Store Assets/SimpleTownLite/_Prefabs/store_small_drug.prefab</Building>
       </Buildings>
-    </Grass>
+    </Urban>
   </Districts>
   <Road>
     <Amount>1</Amount>
     <Max>75</Max>
     <Branches>1</Branches>
-    <Road_Straight>Assets/Store Assets/SimpleTownLite/_Prefabs/Road.prefab</Road_Straight>
+    <Road_Straight></Road_Straight>
   </Road>
 </Settings>

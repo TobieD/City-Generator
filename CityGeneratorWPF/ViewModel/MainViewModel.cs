@@ -90,7 +90,7 @@ namespace CityGeneratorWPF.ViewModel
         /// <summary>
         /// Amount of points to generate
         /// </summary>
-        private int _pointsToGenerate = 250;
+        private int _pointsToGenerate = 150;
 
         public int PointsToGenerate
         {
@@ -138,13 +138,13 @@ namespace CityGeneratorWPF.ViewModel
         /// <summary>
         /// Settings of the bounds in which the points will be spawned
         /// </summary>
-        public int Width { get; set; } = 1600;
+        public int Width { get; set; } = 500;
 
-        public int Height { get; set; } = 900;
+        public int Height { get; set; } = 500;
 
-        public int StartX { get; set; } = 50;
+        public int StartX { get; set; } = 250;
 
-        public int StartY { get; set; } = 50;
+        public int StartY { get; set; } = 250;
 
         /// <summary>
         /// Draw Settings
@@ -177,11 +177,6 @@ namespace CityGeneratorWPF.ViewModel
 
         public IEnumerable<PointGenerationAlgorithm> PossiblePointAlgorithms
             => Enum.GetValues(typeof(PointGenerationAlgorithm)).Cast<PointGenerationAlgorithm>();
-
-        public RoadGenMethod RoadGenMethod { get; set; } = RoadGenMethod.Grid;
-
-        public IEnumerable<RoadGenMethod> PossibleRoadGenMethods
-            => Enum.GetValues(typeof(RoadGenMethod)).Cast<RoadGenMethod>();
 
         public string NewType { get; set; } = "newType";
 
@@ -333,10 +328,9 @@ namespace CityGeneratorWPF.ViewModel
 
 
             RoadRiverSettings.Add(_citySettings.RoadSettings);
-            RoadRiverSettings.Add(_citySettings.RiverSettings);
 
             //debug for math test and drawing
-            //MathTesting();
+           // MathTesting();
 
             #if (DEBUG)
             Seed = 0;
@@ -436,8 +430,6 @@ namespace CityGeneratorWPF.ViewModel
             //Settings for generation
             _citySettings.DistrictSettings = DistrictSettings.ToList();
             _citySettings.RoadSettings = RoadRiverSettings[0];
-            _citySettings.RiverSettings = RoadRiverSettings[1];
-            _citySettings.RoadGenMethod = RoadGenMethod;
 
             //generate city
             var timer = Stopwatch.StartNew();
@@ -460,8 +452,6 @@ namespace CityGeneratorWPF.ViewModel
         {
             //clear canvas
             _drawService.ClearCanvas();
-
-           
 
             DrawVoronoiDiagram();
             DrawCity();
@@ -525,6 +515,11 @@ namespace CityGeneratorWPF.ViewModel
                 return;
 
             int i = 0;
+
+            if (_cityData.Bounds != null)
+            {
+                _drawService.DrawRectangle(_cityData.Bounds, Colors.Red);
+            }
 
             //Draw districts
             foreach (var district in _cityData.Districts)
@@ -612,7 +607,44 @@ namespace CityGeneratorWPF.ViewModel
 
         private void MathTesting()
         {
+
+            //Setup
+
+            var s = new Point(200,700);
+            var e = new Point(500, 350);
+            var l = new Line(s,e);
+
+            var fp = new Point(50,550);
+
+            _drawService.DrawLine(l,Colors.Black,3);
+            _drawService.DrawPoint(e, 7, Colors.Black);
+            _drawService.DrawPoint(s,7,Colors.Black);
+            _drawService.DrawPoint(fp, 7, Colors.Black);
+
+            var offset = l.GenerateOffsetParallelTowardsPoint(20, fp);
+//            _drawService.DrawLine(offset, Colors.Black, 1);
+
+            double minDistance = 2;
+            var width = 10;
+            double totalDistance = offset.Length();
+            double currentDistance = minDistance + width; //Start with an offset
             
+            while(currentDistance < totalDistance - (minDistance + width))
+            {
+
+                var percentage = currentDistance/totalDistance;
+
+                var ps = offset.FindRandomPointOnLine(percentage,percentage);
+                _drawService.DrawPoint(ps, 7, Colors.Black);
+
+                //In unity the width should be the width of the prefab
+                width = RandomHelper.RandomInt(10, 50);
+
+                currentDistance += (minDistance + width);
+            }
+
         }
+
+
     }
 }

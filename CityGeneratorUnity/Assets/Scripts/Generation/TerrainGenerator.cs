@@ -1,8 +1,9 @@
-﻿
+﻿    
 using System.Collections.Generic;
 using System.Linq;
 using CityGenerator;
 using Helpers;
+using UnityEditor;
 using UnityEngine;
 using Voronoi;
 
@@ -22,14 +23,18 @@ public class TerrainSettings
     public int AlphamapSize = 1025;
     public int TerrainHeight = 256;
 
+    public int TerrainScaleFactor = 3;
+
     //Noise Settings
     public int GroundSeed = 0;
     public float GroundFrequency = 800.0f;
     public int MountainSeed = 0;
     public float MountainFrequency = 1200.0f;
+    public float TreeFrequency = 500.0f;
 
     //prototypes
     public List<SplatTexture> SplatMaps = new List<SplatTexture>(2);
+    public List<GameObject> Trees = new List<GameObject>(2); 
 
     public SplatTexture RoadTexture = new SplatTexture();
 }
@@ -41,89 +46,28 @@ public class TerrainGenerator
 {
     //TerrainSettings
     public TerrainSettings TerrainSettings;
+    private GenerationSettings _genSettings;
 
     //width and height of the terrain
     private int _terrainWidth = 300;
     private int _terrainLength = 300;
 
-    Terrain _terrain;
-
-    //textures used based on height
-    private SplatPrototype[] _splatPrototypes;
-    private SplatPrototype _roadSplatPrototype;
+    public Terrain Terrain;
+    public TerrainData TerrainData
+    {
+        get { return Terrain.terrainData; }
+    }
+    private GameObject _terrain;
 
     //Perlin noise for terrain
-    PerlinNoise _groundNoise, _mountainNoise;
+    private PerlinNoise _groundNoise;
+    private PerlinNoise _mountainNoise;
+    private PerlinNoise _treeNoise;
+
+    private CityData _cityData;
 
     //stores texture information of the terrain(splatmaps)
     private float[,,] _alphadata;
-
-    /// <summary>
-    /// Create terrain using the bounds of the voronoi diagram
-    /// </summary>
-    public void BuildTerrain(GenerationSettings genSettings, TerrainSettings terrainSettings, GameObject parent)
-    {
-        //store settings
-        TerrainSettings = terrainSettings;
-
-        //make sure all settings are correct
-        if (!CreateSettings(genSettings))
-        {
-            Debug.LogError("Unable to generate terrain!");
-            return;
-        }
-
-        //create heightmap using perlin noise
-        float[,] heightmap = new float[TerrainSettings.HeightmapSize, TerrainSettings.HeightmapSize];
-        FillHeightmap(heightmap);
-        
-        //Create terrain data
-        TerrainData terrainData = new TerrainData();
-        terrainData.heightmapResolution = TerrainSettings.HeightmapSize;
-        terrainData.SetHeights(0,0,heightmap);
-        terrainData.size = new Vector3(_terrainWidth, TerrainSettings.TerrainHeight, _terrainLength);
-
-        //make sure a splat map is defined
-        if (_splatPrototypes[0].texture != null)
-        {
-            terrainData.splatPrototypes = _splatPrototypes;
-        }
-
-        //fill the textures of the terrain with the splatmaps
-        FillAlphamap(terrainData);
-
-        //Create terrain from terrain data
-        var terrainObj = Terrain.CreateTerrainGameObject(terrainData);
-        terrainObj.transform.parent = parent.transform;
-        terrainObj.transform.position = new Vector3(-(_terrainWidth/2),0,-(_terrainLength/2));
-        
-
-        //Access terrain data and set terrain data
-        _terrain = terrainObj.GetComponent<Terrain>();
-
-        _terrain.terrainData = terrainData;
-        _terrain.castShadows = false; //better fps
-    }
-
-    public void ApplyRoadData(CityData cityData)
-    {
-        var terrainData = _terrain.terrainData;
-
-        _alphadata = terrainData.GetAlphamaps(0, 0, terrainData.alphamapWidth, terrainData.alphamapHeight);
-
-        foreach (var district in cityData.Districts)
-        {
-            foreach (var cell in district.Cells)
-            {
-                foreach (var road in cell.Roads)
-                {
-                    ChangeTextureRoad(road);
-                }
-            }
-        }
-
-        terrainData.SetAlphamaps(0,0, _alphadata);
-    }
 
     /// <summary>
     /// Are settings correctly set and fix them if not
@@ -133,51 +77,143 @@ public class TerrainGenerator
         //Set up noise
         _groundNoise = new PerlinNoise(TerrainSettings.GroundSeed);
         _mountainNoise = new PerlinNoise(TerrainSettings.MountainSeed);
-
-        //Create prototypes for terrain(textures, trees,...)
-        CreatePrototypes();
+        _treeNoise = new PerlinNoise(TerrainSettings.GroundSeed);
 
         if (!Mathf.IsPowerOfTwo(TerrainSettings.HeightmapSize - 1))
         {
             Debug.LogWarning("Terrain Generator:: Height map size must be pow2 + 1!");
             TerrainSettings.HeightmapSize = Mathf.ClosestPowerOfTwo(TerrainSettings.HeightmapSize) + 1;
         }
-        
-        //Terrain size
-        _terrainWidth = (int)generationSettings.Width * 2;
-        _terrainLength = (int)generationSettings.Length* 2;
 
-        if (_splatPrototypes.Length < 1)
-        {
-            Debug.LogWarning("Terrain Generator:: No splatmaps set!");
-            return false;
-        }
+        //Terrain size
+        _terrainWidth = (int)generationSettings.Width * TerrainSettings.TerrainScaleFactor;
+        _terrainLength = (int)generationSettings.Length * TerrainSettings.TerrainScaleFactor;
 
         //everything is valid
         return true;
     }
 
     /// <summary>
+    /// Create terrain using the bounds of the voronoi diagram
+    /// </summary>
+    public void BuildTerrain(GenerationSettings genSettings, TerrainSettings terrainSettings, GameObject parent)
+    {
+        //store settings
+        TerrainSettings = terrainSettings;
+        _genSettings = genSettings;
+
+        //make sure all settings are correct
+        if (!CreateSettings(genSettings))
+        {
+            Debug.LogError("Unable to generate terrain!");
+            return;
+        }
+
+        //Create terrain data
+        var terrainData = new TerrainData
+        {
+            heightmapResolution = TerrainSettings.HeightmapSize,
+            size = new Vector3(_terrainWidth, TerrainSettings.TerrainHeight, _terrainLength)
+        };
+
+        //Create prototypes for terrain(textures, trees,...)
+        CreatePrototypes(terrainData);
+
+        //create heightmap using perlin noise
+        var heightmap = new float[TerrainSettings.HeightmapSize, TerrainSettings.HeightmapSize];
+        FillHeightmap(heightmap);
+        terrainData.SetHeights(0, 0, heightmap);
+
+        //fill the textures of the terrain with the splatmaps
+        FillAlphamap(terrainData);
+        _alphadata = terrainData.GetAlphamaps(0, 0, terrainData.alphamapWidth, terrainData.alphamapHeight);
+
+        //Create terrain from terrain data
+        _terrain = Terrain.CreateTerrainGameObject(terrainData);
+        _terrain.transform.parent = parent.transform;
+        _terrain.transform.position = new Vector3(-(_terrainWidth/2), 0, -(_terrainLength/2));
+
+        //Access terrain data and set terrain data
+        Terrain = _terrain.GetComponent<Terrain>();
+        Terrain.terrainData = terrainData;
+        Terrain.castShadows = false; //better fps
+        Terrain.Flush();
+    }
+
+    /// <summary>
+    /// Populate the terrain using the generated city information
+    /// </summary>
+    public void PopulateTerrain(CityData cityData)
+    {
+        _cityData = cityData;
+
+        //place trees 
+        GenerateTrees(TerrainData, cityData);
+
+        //apply textures for the roads and stuff
+        ApplyTextures(cityData);
+    }
+
+    /// <summary>
+    /// Apply textures for roads and houses
+    /// </summary>
+    private void ApplyTextures(CityData cityData)
+    {
+        var terrainData = Terrain.terrainData;
+
+        _alphadata = terrainData.GetAlphamaps(0, 0, terrainData.alphamapWidth, terrainData.alphamapHeight);
+        
+        foreach (var district in cityData.Districts)
+        {
+            //ChangeDistrictTexture(district);
+
+            foreach (var cell in district.Cells)
+            {
+                foreach (var road in cell.Roads)
+                {
+                    foreach (var building in road.Buildings)
+                    {
+                        ChangeTextureBuildingBlock(building,5);
+                    }
+                }
+
+                foreach (var road in cell.Roads)
+                {
+                    ChangeTextureRoad(road,4);
+                }
+            }
+        }
+
+        terrainData.SetAlphamaps(0, 0, _alphadata);
+    }
+
+    #region Generation
+    /// <summary>
     /// Fill the height map using perlin noise
     /// </summary>
     private void FillHeightmap(float[,] heightmap)
     {
-        var ratio = (float) _terrainWidth/(float)TerrainSettings.HeightmapSize;
+        var ratio = (float) _terrainWidth/(float) TerrainSettings.HeightmapSize;
+
+
         for (int x = 0; x < TerrainSettings.HeightmapSize; x++)
         {
             for (int z = 0; z < TerrainSettings.HeightmapSize; z++)
             {
-                var worldPosX = x * ratio;
-                var worldPosZ = z * ratio; 
+                var worldPosX = x*ratio;
+                var worldPosZ = z*ratio;
 
                 float height = 0;
-                var mountains = Mathf.Max(0.0f, _mountainNoise.FractalNoise2D(worldPosX, worldPosZ, 6, TerrainSettings.MountainFrequency, 0.7f));
-                var plain = _groundNoise.FractalNoise2D(worldPosX, worldPosZ, 4, TerrainSettings.GroundFrequency, 0.1f);
+                float mountains = 0;
+                float plain = 0;
+                
+                mountains = Mathf.Max(0.0f,_mountainNoise.FractalNoise2D(worldPosX, worldPosZ, 6, TerrainSettings.MountainFrequency, 0.2f));
+                plain = _groundNoise.FractalNoise2D(worldPosX, worldPosZ, 4, TerrainSettings.GroundFrequency, 0.1f);
 
                 height = plain + mountains;
-                height = 0;
 
                 heightmap[x, z] = height;
+
             }
         }
     }
@@ -187,6 +223,15 @@ public class TerrainGenerator
     /// </summary>
     private void FillAlphamap(TerrainData data)
     {
+        //Make sure textures have been specified
+        if (data.splatPrototypes.Length == 0)
+        {
+            Debug.LogWarning("Unable to generate terrain textures\nPlease specify textures to use for the terrain.");
+            return;
+        }
+
+
+
         //use the same size as the height map 
         var size = TerrainSettings.HeightmapSize;
         var alphaHeight = data.heightmapHeight;
@@ -271,96 +316,291 @@ public class TerrainGenerator
     }
 
     /// <summary>
-    /// Create protoypes to be used for the terrain based on settings
-    /// <remarks> only 5 splatmaps can be used(4 for terrain, 1 for road)</remarks>
+    /// Generate trees on the terrain using specified prefabs
     /// </summary>
-    private void CreatePrototypes()
+    private void GenerateTrees(TerrainData data, CityData cityData)
     {
-        //Create splatmaps from user textures
-        _splatPrototypes = new SplatPrototype[TerrainSettings.SplatMaps.Count + 1];
-        for(int i = 0; i < TerrainSettings.SplatMaps.Count; ++i)
+        //make sure prefabs have been specified
+        if (data.treePrototypes.Length == 0)
         {
-            var map = TerrainSettings.SplatMaps[i];
-
-            _splatPrototypes[i] = new SplatPrototype
-            {
-                texture = map.Texture,
-                tileSize = new Vector2(map.TileSize, map.TileSize)
-            };
+            Debug.LogWarning("Unable to generate trees\nPlease specify prefabs to use for trees.");
+            return;
         }
 
-        //Create a splat for the road at the end of the splat prototypes
-        _roadSplatPrototype = new SplatPrototype
-        {
-            texture = TerrainSettings.RoadTexture.Texture,
-            tileSize = new Vector2(TerrainSettings.RoadTexture.TileSize, TerrainSettings.RoadTexture.TileSize)
-        };
+        //create a list of tree instances
+        int increment = 3;
+        float terrainSize = _terrainWidth;
 
-        _splatPrototypes[_splatPrototypes.Length -1] = _roadSplatPrototype;
+        //Spawn the trees on the terrain
+        for (int x = 0; x < terrainSize; x += increment)
+        {
+            for (int z = 0; z < terrainSize; z += increment)
+            {
+                float unit = 1.0f/(terrainSize - 1);
+                float normX = x*unit;
+                float normZ = z*unit;
+                float worldX = x*(terrainSize - 1);
+                float worldZ = z*(terrainSize - 1);
+
+                //randomizes the spread
+                increment = RandomHelper.RandomInt(1, 3);
+                var rng = RandomHelper.RandomInt(0, 100);
+
+                //use different generation rules when inside of the city
+                if (!CoordinateInsideOfBounds(x, z,20) && rng > 15)
+                {
+                    var noise = _treeNoise.FractalNoise2D(worldX, worldZ, 3, TerrainSettings.TreeFrequency, 1.0f);
+                    float ht = data.GetInterpolatedHeight(normX, normZ);
+                    if (noise > 0.2f && ht < TerrainSettings.TerrainHeight*0.4f)
+                    {
+                        var tree = new TreeInstance
+                        {
+                            heightScale = 1,
+                            widthScale = 1,
+                            prototypeIndex = RandomHelper.RandomInt(0, data.treePrototypes.Length),
+                            lightmapColor = Color.white,
+                            color = Color.white,
+                            position = new Vector3(normX, ht, normZ)
+                        };
+
+                        //add the tree
+                        Terrain.AddTreeInstance(tree);
+                    }
+                }
+                else
+                {
+                    var noise = _treeNoise.FractalNoise2D(worldX, worldZ, 8, TerrainSettings.TreeFrequency, 0.7f);
+                    float ht = data.GetInterpolatedHeight(normX, normZ);
+                    if (noise > 0.4f && ht < TerrainSettings.TerrainHeight*0.4f)
+                    {
+                        var tree = new TreeInstance
+                        {
+                            heightScale = 1,
+                            widthScale = 1,
+                            prototypeIndex = RandomHelper.RandomInt(0, data.treePrototypes.Length),
+                            lightmapColor = Color.white,
+                            color = Color.white,
+                            position = new Vector3(normX, ht, normZ)
+                        };
+
+                        //add the tree
+                        //Terrain.AddTreeInstance(tree);
+                    }
+                }
+            }
+            //send the tree instances to the terrain
+            Terrain.Flush();
+        }
     }
 
+    private void RemoveTreesThatIntersectWithBuildingsOrRoads()
+    {
+        
+    }
+    #endregion
+    
+    #region Textures
     /// <summary>
     /// Apply a specific texture at a specific location in the terrain
     /// </summary>
-    private void ChangeTexture(Vector3 pos, int textureIndex, int size = 10,int spread = 2)
-    {
-        var alphaMapsNb = _terrain.terrainData.alphamapLayers;
-
+    private void ChangeTexture(Vector3 pos, int textureIndex, int size = 10,int spread = 4)
+    { 
         var coord = WorldToTerrainCoordinate(pos);
 
         int alphaX = (int)coord.x;
         int alphaZ = (int)coord.z;
 
-        int halfSpread = spread/2;
-        for (int i = 0; i < alphaMapsNb; i++)
+        ChangeTextureAtCoordinate(alphaX,alphaZ,textureIndex,spread);
+    }
+
+    private void ChangeTextureAtCoordinate(int alphaX, int alphaZ, int textureIndex, int spread)
+    {
+        for (int i = 0; i < Terrain.terrainData.alphamapLayers; i++)
         {
-            var value = (textureIndex == i) ? 1.0f : 0.0f;
-            _alphadata[alphaZ, alphaX, i] = value;
+            int value = (textureIndex == i) ? 1 : 0;
 
-            for(int x = 0; x < halfSpread; ++x)
+            for (int x = -spread/2; x <= spread/2; ++x)
             {
-                _alphadata[alphaZ- x, alphaX- x, i] = value;
-                _alphadata[alphaZ+ x, alphaX+ x, i] = value;
+                _alphadata[alphaZ + x, alphaX + x, i] = value;
             }
-
         }
     }
 
-    private void ChangeTextureRoad(Road road, int size = 10)
+    private void ChangeTextureRoad(Road road,int spread, int size = 10)
     {
-        var roadSplatIndex = _terrain.terrainData.alphamapLayers;
-        
+        var roadSplatIndex = Terrain.terrainData.alphamapLayers - 1;
+
         float moveForward = 0.1f;
-        Vector3 start = road.RoadLine.Start.ToVector3();
-        Vector3 end = road.RoadLine.End.ToVector3();
+        Vector3 start = road.Start.ToVector3();
+        Vector3 end = road.End.ToVector3();
         float distance = Vector3.Distance(start, end);
 
         Vector3 currPos = Vector3.MoveTowards(start, end, moveForward);
 
         //Change Texture on start position
-        ChangeTexture(start, roadSplatIndex, size);
+        ChangeTexture(start, roadSplatIndex, size, spread);
 
         //Change texture between the start and end position
         for (int i = 0; i <= distance/moveForward; i++)
         {
-            ChangeTexture(currPos, roadSplatIndex, size);
+            ChangeTexture(currPos, roadSplatIndex, size, spread);
             currPos = Vector3.MoveTowards(currPos, end, moveForward);
         }
 
         //Change texture on end position
-        ChangeTexture(end, roadSplatIndex, size);
+        ChangeTexture(end, roadSplatIndex, size, spread);
+    }
+
+    private void ChangeTextureBuildingBlock(BuildingSite building, int spread)
+    {
+
+        var textureIndex = TerrainData.alphamapLayers - 2;
+        int halfWidth = building.Width/2;
+        int halfLength = building.Height/1;
+
+        for (int x = -halfWidth; x < halfWidth; x++)
+        {
+            for (int z = -halfLength; z < halfLength; z++)
+            {
+                //ChangeTexture(new Vector3((float)building.X + x, 0, (float)building.Y + z),textureIndex,spread);
+            }
+        }
+    }
+
+    public void ChangeDistrictTexture(District district)
+    {
+        var textureIndex = Terrain.terrainData.alphamapLayers - 2;
+        float margin = 1;
+        float minX = 99999f;
+        float minZ = 99999f;
+        float maxX = 0f;
+        float maxZ = 0f;
+
+        //find bounds of the district
+        foreach (DistrictCell cell in district.Cells)
+        {
+            var cellPos = cell.SitePoint.ToVector3();
+
+            if (cellPos.x > maxX)
+            {
+                maxX = cellPos.x;
+            }
+
+            if (cellPos.y > maxZ)
+            {
+                maxZ = cellPos.z;
+            }
+
+            if (cellPos.x < minX)
+            {
+                minX = cellPos.x;
+            }
+
+            if (cellPos.y < minZ)
+            {
+                minZ = cellPos.z;
+            }
+        }
+
+        for (float x = minX; x <= maxX; x += margin)
+        {
+            for (float z = minZ; z <= maxZ; z += margin)
+            {
+                Vector3 currentPos = new Vector3(x, GetY(x, z),z);
+
+                ChangeTexture(currentPos, textureIndex,10,1);
+            }
+        }
+    }
+    #endregion
+
+    #region Helpers
+
+    /// <summary>
+    /// Create protoypes to be used for the terrain based on settings
+    /// </summary>
+    private void CreatePrototypes(TerrainData data)
+    {
+        //Create splatmaps from user textures
+        var splatmaps = new List<SplatPrototype>();
+        for (int i = 0; i < TerrainSettings.SplatMaps.Count; ++i)
+        {
+            var map = TerrainSettings.SplatMaps[i];
+            if (map != null)
+            {
+                var splatmap = new SplatPrototype
+                {
+                    texture = map.Texture,
+                    tileSize = new Vector2(map.TileSize, map.TileSize)
+                };
+
+                splatmaps.Add(splatmap);
+            }
+        }
+
+        //Create a splat for the road at the end of the splat prototypes-
+        if (TerrainSettings.RoadTexture.Texture != null)
+        {
+            var roadsplat = new SplatPrototype
+            {
+                texture = TerrainSettings.RoadTexture.Texture,
+                tileSize = new Vector2(TerrainSettings.RoadTexture.TileSize, TerrainSettings.RoadTexture.TileSize)
+            };
+            splatmaps.Add(roadsplat);
+        }
+
+        if (splatmaps.Count > 0)
+        {
+            data.splatPrototypes = splatmaps.ToArray();
+        }
+
+        //Create the tree prototypes from the settings
+        List<TreePrototype> treePrototypes = new List<TreePrototype>();
+        foreach (var prefab in TerrainSettings.Trees)
+        {
+            if (prefab != null)
+            {
+                TreePrototype treeProto = new TreePrototype();
+                treeProto.prefab = prefab;
+                treePrototypes.Add(treeProto);
+            }
+        }
+
+        //set the tree prototypes to the terrain
+        data.treePrototypes = treePrototypes.ToArray();
+
+
+
+    }
+
+    public float GetY(float x, float z)
+    {
+        return Terrain.SampleHeight(new Vector3(x, 0, z));
     }
 
     private Vector3 WorldToTerrainCoordinate(Vector3 worldPos)
     {
-        int size = 10;
-        Vector3 scale = _terrain.terrainData.heightmapScale;
+        int size = TerrainSettings.TerrainScaleFactor/2;
+        Vector3 scale = Terrain.terrainData.heightmapScale;
 
-        int xPos = (int) ((worldPos.x - _terrain.transform.position.x)/scale.x - (size/2));
-        int zPos = (int)((worldPos.z - _terrain.transform.position.z) / scale.z - (size / 2));
+        var xPos = (int) ((worldPos.x - Terrain.transform.position.x)/scale.x) - size;
+        var zPos = (int) ((worldPos.z - Terrain.transform.position.z)/scale.z) - size;
 
-        return new Vector3(xPos,size,zPos);
-
+        return new Vector3(xPos, size, zPos);
     }
 
+    private bool CoordinateInsideOfBounds(float x, float y, float margin = 0)
+    {
+        //x = 0
+        float minWidth = (_terrainWidth / TerrainSettings.TerrainScaleFactor) - margin;
+        float maxWidth = (_terrainWidth - (_terrainWidth / TerrainSettings.TerrainScaleFactor)) + margin;
+
+        float minLength = (_terrainLength / TerrainSettings.TerrainScaleFactor) - margin;
+        float maxLength = (_terrainLength - (_terrainLength / TerrainSettings.TerrainScaleFactor)) + margin;
+
+        return (x > minWidth && x < maxWidth && y > minLength && y < maxLength);
+    }
+
+
+    #endregion
 }

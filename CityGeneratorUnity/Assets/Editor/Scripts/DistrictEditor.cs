@@ -37,10 +37,6 @@ public class DistrictEditor
 
         _districtSettings.Frequency = EditorGUILayout.IntSlider("Frequency",_districtSettings.Frequency, 0, 10);
         _districtSettings.Size = EditorGUILayout.Slider("Size",(float)_districtSettings.Size, 0.0f, 1.0f);
-        _districtSettings.Offset = EditorGUILayout.IntSlider("Building Offset", _districtSettings.Offset, 5, 15);
-
-        _districtSettings.Percentage = EditorGUILayout.IntSlider("Building Interval", (int)_districtSettings.Percentage, 2, 75);
-
 
         //define prefab settings
         GUI.SetNextControlName("Size");
