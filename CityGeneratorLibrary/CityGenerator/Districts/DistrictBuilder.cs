@@ -15,18 +15,17 @@ namespace CityGenerator
     {
         private List<DistrictCell> _districtCells;
         private BowyerWatsonGenerator _triangulator = new BowyerWatsonGenerator();
-
+        private CitySettings _citySettings;
 
         //helpers for building roads
         private readonly RoadBuilder _roadBuilder = new RoadBuilder();
-        private RoadSettings _roadSettings;
-
-        private bool bEnableDebugMode = true;
 
         public List<District> CreateCityDistricts(CitySettings settings,VoronoiDiagram voronoi)
         {
+            _citySettings = settings;
+
             //create districts cells from the voronoi cells
-            _districtCells = GenerateDistrictCells(settings, voronoi);
+            _districtCells = GenerateDistrictCells(voronoi);
             
             //create districts from the  corresponding district cells
             return settings.DistrictSettings.Select(CreateDistrict).ToList();
@@ -38,11 +37,9 @@ namespace CityGenerator
         private District CreateDistrict(DistrictSettings settings)
         {
             var district = new District {DistrictType = settings.Type };
-            var buildpoints = new List<Point>();
 
             //sort all cells by their district type
             //and generate the roads
-            //and generate the building sites
             foreach (var dc in _districtCells)
             {
                 //sort by type
@@ -55,49 +52,47 @@ namespace CityGenerator
                 district.Cells.Add(dc);
 
                 //generate roads inside the district cell
-                dc.Roads = _roadBuilder.BuildRoad(_roadSettings, dc);
+                dc.Roads = _roadBuilder.BuildRoad(dc, _citySettings.GenerateInnerRoads, _citySettings.RoadSubdivision);
 
                 //Because the width of the building needs to be know the building site generation needs to be done in unity
-                continue;
-
-                double minDistance = 2;
+                //double minDistance = 2;
                 
-                //Generate build points for every road inside the district cell
-                foreach (var road in dc.Roads)
-                {
-                    //0. Get the offset line from this road towards the center of the cell
-                    Line offsetLine = road.GenerateOffsetParallelTowardsPoint(settings.Offset, dc.SitePoint);
+                ////Generate build points for every road inside the district cell
+                //foreach (var road in dc.Roads)
+                //{
+                //    //0. Get the offset line from this road towards the center of the cell
+                //    Line offsetLine = road.GenerateOffsetParallelTowardsPoint(settings.Offset, dc.SitePoint);
 
-                    //1. Calculate the total length of the line
-                    double totalLength = offsetLine.Length();
-                    double lengthTraveled = minDistance*2;
+                //    //1. Calculate the total length of the line
+                //    double totalLength = offsetLine.Length();
+                //    double lengthTraveled = minDistance*2;
 
-                    //keep repeating until the end is reached
-                    while (lengthTraveled < totalLength)
-                    {
-                        //3. get point on line using normalized values [0,1]
-                        var pc = lengthTraveled/totalLength;
-                        var p = offsetLine.FindRandomPointOnLine(pc, pc);
+                //    //keep repeating until the end is reached
+                //    while (lengthTraveled < totalLength)
+                //    {
+                //        //3. get point on line using normalized values [0,1]
+                //        var pc = lengthTraveled/totalLength;
+                //        var p = offsetLine.FindRandomPointOnLine(pc, pc);
 
-                        //4.Create q building site from this point
-                        var bs = BuildingSite.FromPoint(p);
-                        road.Buildings.Add(bs);
+                //        //4.Create q building site from this point
+                //        var bs = BuildingSite.FromPoint(p);
+                //        road.Buildings.Add(bs);
 
-                        //5. travel along the line using the width of the building site
-                        lengthTraveled += (minDistance + bs.Width );
-                    }
-                }
+                //        //5. travel along the line using the width of the building site
+                //        lengthTraveled += (minDistance + bs.Width );
+                //    }
+                //}
+
+            if(_citySettings.DebugMode)
+                    break;
 
             }
 
             return district;
         }
 
-        private List<DistrictCell> GenerateDistrictCells(CitySettings settings, VoronoiDiagram voronoi)
+        private List<DistrictCell> GenerateDistrictCells(VoronoiDiagram voronoi)
         {
-            _roadSettings = settings.RoadSettings;
-            bEnableDebugMode = settings.DebugMode;
-
             //Create a district cell from the voronoi cells
             var districtCells = new List<DistrictCell>();
             foreach (var cell in voronoi.GetCellsInBounds())
@@ -108,12 +103,12 @@ namespace CityGenerator
                     continue;
                 }
 
-                districtCells.Add(DistrictCell.FromCell(cell,settings.DistrictSettings[0].Type));
+                districtCells.Add(DistrictCell.FromCell(cell,_citySettings.DistrictSettings[0].Type));
             }
 
 
-            //tag random cells
-            foreach (var setting in settings.DistrictSettings)
+            //tag random cells based on the settings for each district
+            foreach (var setting in _citySettings.DistrictSettings)
             {
                 for (int i = 0; i < setting.Frequency; ++i)
                 {

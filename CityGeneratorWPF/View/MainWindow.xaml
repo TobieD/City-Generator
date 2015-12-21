@@ -212,6 +212,21 @@
             <TabItem Header="City">
                 <StackPanel Orientation="Vertical" Background="#FFC8C8C8">
 
+                    <StackPanel Orientation="Horizontal">
+                        <Label Content= "Debug Mode" Width="120" Margin="5"/>
+                        <CheckBox IsChecked="{Binding Main.DebugMode}" Margin="10"/>
+                    </StackPanel>
+                    
+                    <StackPanel Orientation="Horizontal">
+                        <Label Content="Generate inner roads" Width="120" Margin="5"/>
+                        <CheckBox IsChecked="{Binding Main.GenerateInnerRoads}" Margin="10"/>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal">
+                        <Label Content="Road Subdivisions" Width="109" Margin="2"/>
+                        <Slider Value="{Binding Main.RoadSubdivisions}" Minimum="0" Maximum="4" Margin="5" Width="54" Height="16"/>
+                    </StackPanel>
+
                     <Label Margin="5,0,0,0" Content="Settings" FontWeight="Bold"/>
                     <StackPanel Orientation="Horizontal">
                         <TextBox Text="{Binding Main.NewType}" Width="100" Margin="5"/>
@@ -219,6 +234,9 @@
                         <Button Content="-" Command="{Binding Main.RemoveSettingsCommand}" CommandParameter="{Binding Main.NewType}" Width ="20" Margin="5"/>
 
                     </StackPanel>
+
+
+                   
 
                     <Expander Header="District Settings">
                         <ListView ItemsSource="{Binding Main.DistrictSettings}">
@@ -256,39 +274,7 @@
 
                         </ListView>
                     </Expander>
-
-                    <Expander Header="Road/River Settings">
-                        <ListView ItemsSource="{Binding Main.RoadRiverSettings}">
-                            <ListView.ItemTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Vertical">
-                                        <StackPanel Orientation="Horizontal">
-                                            <Label Content="Type: "/>
-                                            <Label Content="{Binding Type}"/>
-                                        </StackPanel>
-
-                                        <StackPanel Orientation="Horizontal">
-                                            <Label Content="Amount: "/>
-                                            <Slider Width="100" Value="{Binding Amount}" Maximum="15" Minimum="0" LargeChange="1"/>
-                                        </StackPanel>
-
-                                        <StackPanel Orientation="Horizontal">
-                                            <Label Content="Branches: "/>
-                                            <Slider Width="100" Value="{Binding Branches}" Maximum="15" Minimum="0"/>
-                                        </StackPanel>
-
-                                        <StackPanel Orientation="Horizontal">
-                                            <Label Content="Max: "/>
-                                            <Slider Width="100" Value="{Binding Max}" Maximum="75" Minimum="1"/>
-                                        </StackPanel>
-
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ListView.ItemTemplate>
-
-                        </ListView>
-                    </Expander>
-
+                 
                     <Label Margin="5,0,0,0" Content="Visualize" FontWeight="Bold"/>
 
                     <Grid Margin="5,0,0,0">

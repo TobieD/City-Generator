@@ -28,7 +28,7 @@ public class TownZone : MonoBehaviour
         ZoneType = _cell.DistrictType;
         _settings = settings;
 
-        DrawBounds();
+        DrawRoadPreview();
     }
 
     /// <summary>
@@ -45,7 +45,7 @@ public class TownZone : MonoBehaviour
     {
         //Draw Visualization of Voronoi Cell 
         if (bDrawBounds)
-            DrawBounds();
+            DrawRoadPreview();
         else
         {
             DestroyImmediate(_zoneObject);
@@ -65,9 +65,9 @@ public class TownZone : MonoBehaviour
         var prefabs = GetPrefabsForType(ZoneType);
         if (prefabs.Count < 1)
         {
-            //Debug.LogWarningFormat("No prefab buildings set for {0}!\nPlease add building prefabs.", _cell.DistrictType);
             return;
         }
+        
 
         //Generate the roads
         //Change roads to be build in the terrain using textures
@@ -88,7 +88,7 @@ public class TownZone : MonoBehaviour
             int offset = _settings.Offset;
 
             offset = 5;
-            int minDistance = 4;
+            int minDistance = 1;
             int index = 0;
 
             //0. Get the offset line from this road towards the center of the cell
@@ -96,7 +96,7 @@ public class TownZone : MonoBehaviour
 
             //1. Calculate the total length of the line
             double totalLength = offsetLine.Length();
-            double lengthTraveled = minDistance * 2;
+            double lengthTraveled = minDistance;
 
             //keep repeating until the end is reached
             while (lengthTraveled < totalLength - minDistance) 
@@ -111,7 +111,7 @@ public class TownZone : MonoBehaviour
                 //Place the building in the world
                 var prefab = prefabs.GetRandomValue();
                 objectName = string.Format("building_{0}", index + 1);
-                GenerateBuildingFromPrefab(prefab,objectName,p,road,roadObject);
+                bs.UserData = GenerateBuildingFromPrefab(prefab,objectName,p,road,roadObject);
 
                 var prefabBounds = prefab.GetPrefabBounds();
                 bs.Width = (int)prefabBounds.x + minDistance;
@@ -123,9 +123,13 @@ public class TownZone : MonoBehaviour
                 _cell.Roads[i].Buildings.Add(bs);
             }
         }
+
+        //spawn a building in the center of the cell
+        
+        //GenerateBuildingFromPrefab(prefabs.GetRandomValue(),"building_center",_cell.Center(),_cell.Roads[0],gameObject);
     }
 
-    private void DrawBounds()
+    private void DrawRoadPreview()
     {
         if (_zoneObject != null)
         {
@@ -149,23 +153,28 @@ public class TownZone : MonoBehaviour
         }
         
         //Load the material and change color based on zone type
-        var mat = Resources.Load <Material>("Material/ZoneBorder_mat");
+        var mat = Resources.Load <Material>("Materials/ZoneBorder_mat");
 
         //Add line renderer
         var line = _zoneObject.AddComponent<LineRenderer>();
         line.enabled = true;
-        line.SetVertexCount(_cell.Points.Count);
+        line.SetVertexCount(_cell.Points.Count + 1);
         line.material = mat;
 
+        List<Vector3> positions = new List<Vector3>();
         //create all the points of the line
         int i = 0;
         foreach (var point in _cell.Points)
         {
             var pos = point.ToVector3();
             pos.y = TownGenerator.GetInstance().Terrain.SampleHeight(new Vector3(pos.x, 0, pos.z)) + 10;
-            line.SetPosition(i, pos);
-            i++;
+            positions.Add(pos);
+             i++;
         }
+        positions.Add(positions[0]);
+
+        line.SetPositions(positions.ToArray());
+
     }
 
     private GameObject GenerateRoad(Road r, string roadName)
@@ -191,7 +200,7 @@ public class TownZone : MonoBehaviour
     /// <param name="objectName">Name of the object</param>
     /// <param name="pos">Position the building will be spawned</param>
     /// <param name="parentRoad">the road the building is part of </param>
-    private void GenerateBuildingFromPrefab(GameObject prefab, string objectName, Point pos ,Road parentRoad, GameObject road)
+    private GameObject GenerateBuildingFromPrefab(GameObject prefab, string objectName, Point pos ,Road parentRoad, GameObject road)
     {
         //Make the building face the road, make a perpendicular line from the building pos to the road
         var lookAtPos = parentRoad.FindPerpendicularPointOnLine(pos);
@@ -206,23 +215,35 @@ public class TownZone : MonoBehaviour
 
         lookat.y = position.y;
         //lookAtPos.Y = position.y;
-        var buildingObject = (GameObject)Instantiate(prefab, position, prefab.transform.rotation);
 
-        //Debug Only
-        DebugLines.Add(new Line(pos,lookAtPos));
+
+        var size = prefab.GetPrefabBounds();
+        var colliderPos = position;
+        colliderPos.y += size.y / 2;
+
+        var collisions = Physics.OverlapBox(colliderPos, size);
+        if (collisions.Length > 1) //ignore terrain
+        {
+            return null;
+        }
+
+
+        //Spawn the building
+        var buildingObject = (GameObject)Instantiate(prefab, position, prefab.transform.rotation);
 
         //Look at the point
         buildingObject.transform.LookAt(lookat);
 
         //Flip on Y
         buildingObject.transform.RotateAround(pos.ToVector3(),transform.up,180);
-
         buildingObject.transform.parent = road.transform;
         buildingObject.isStatic = true; //Buildings should be static
         buildingObject.name = objectName;
 
         //Make sure the object can be removed on a new build
         _prevSpawnedGameObjects.Add(buildingObject);
+
+        return buildingObject;
     }
 
     public void OnDrawGizmosSelected()
@@ -237,6 +258,30 @@ public class TownZone : MonoBehaviour
             e.y = TownGenerator.GetInstance().Terrain.SampleHeight(e);
 
             Gizmos.DrawLine(s,e);
+        }
+
+        if (_cell == null)
+        {
+            return;
+        }
+
+        //Draw Debug Sphere
+        foreach (var roads in _cell.Roads)
+        {
+            foreach (var building in roads.Buildings)
+            {
+
+                var go = (GameObject)building.UserData;
+                if (go != null)
+                {
+                    var pos = go.transform.position;
+                    var size = go.GetComponent<Collider>().bounds.size;
+                        
+                    pos.y += size.y/2;
+
+                    Gizmos.DrawCube(pos, size);
+                }
+            }
         }
     }
 

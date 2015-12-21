@@ -9,7 +9,8 @@ namespace CityGenerator
     {
         public List<DistrictSettings> DistrictSettings;
 
-        public RoadSettings RoadSettings = new RoadSettings(75,1, 1,"Road");
+        public bool GenerateInnerRoads = false;
+        public int RoadSubdivision = 1; //best limitied to 2
 
         public bool DebugMode = true;
     }
@@ -35,32 +36,6 @@ namespace CityGenerator
         public DistrictSettings(string type)
         {
             Type = type;
-        }
-    }
-
-    public class RoadSettings
-    {
-        public int Amount { get; set; }
-
-        //number of branches going from the original road   
-        public int Branches { get; set; }
-
-        //max amount of lines connected
-        public int Max { get; set; }
-
-        public string Type { get; private set; }
-
-        public int Width { get; set; }
-        public bool GenerateInnerRoads { get; set; }
-
-        public RoadSettings(int max, int branches, int amount,string type, int width = 10)
-        {
-            Amount = amount;
-            Max = max;
-            Branches = branches;
-            Type = type;
-            Width = width;
-            GenerateInnerRoads = false;
         }
     }
 

@@ -33,10 +33,13 @@ namespace CityGenerator
         public int Width;
         public int Height;
 
+        public object UserData;
+
         public BuildingSite(double x, double y):base(x,y)
         {
             Width = 15;
             Height = 15;
+            UserData = null;
         }
         
 

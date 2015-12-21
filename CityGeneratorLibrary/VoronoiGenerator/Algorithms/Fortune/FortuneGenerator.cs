@@ -91,7 +91,7 @@ namespace Voronoi.Algorithms
                 line.CellRight = _siteCells[pRight];
 
                 line.bSharedBetweenCells = true;
-
+                
             }
 
             //Filter out double cells

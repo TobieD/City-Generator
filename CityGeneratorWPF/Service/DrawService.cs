@@ -288,7 +288,7 @@ namespace CityGeneratorWPF.Service
                     foreach (var road in cell.Roads)
                     {
                         //roadColor = Extensions.Extensions.RandomColor(false,225);
-                        DrawRoad(road, roadColor, Colors.Red, Colors.Aqua, false,1);
+                        DrawRoad(road, roadColor, Colors.Red, Colors.Aqua, true,1);
                     }
                 }
 
@@ -302,8 +302,11 @@ namespace CityGeneratorWPF.Service
             //width = line.Intersected ? width + 1 : width;
             DrawLine(road,linecolor, width);
 
-            //DrawPoint(road.RoadLine.Start,10,Colors.Red);
-            //DrawPoint(road.RoadLine.End, 5, Colors.CornflowerBlue);
+            if (drawStartEnd)
+            {
+                DrawPoint(road.Start, 7, Colors.Red);
+                DrawPoint(road.End, 7, Colors.Red);
+            }
 
             var slope = road.Slope();
 

@@ -105,6 +105,8 @@ public class TownGenerator:Singleton<TownGenerator>
         //build trees, roads,...
         TerrainGenerator.PopulateTerrain(_cityData);
 
+        //DrawCityBounds();
+
     }
 
     public void Clear()
@@ -119,6 +121,36 @@ public class TownGenerator:Singleton<TownGenerator>
         //clear root game object, will clear all child objects as well.
         var prev = GameObject.Find("Town");
         Object.DestroyImmediate(prev);
+
+    }
+
+    private void DrawCityBounds()
+    {
+        var line = Parent.AddComponent<LineRenderer>();
+
+        line.enabled = true;
+        line.SetVertexCount(5);
+        line.material = Resources.Load<Material>("Material/ZoneBorder_mat");
+
+        var bounds = _cityData.Bounds;
+
+        float top = (float)bounds.Top;
+        float bottom = (float)bounds.Bottom;
+        float left = (float)bounds.Left;
+        float right = (float)bounds.Right;
+        float height = 15;
+
+        var positions = new Vector3 []
+        {
+            new Vector3(left,Terrain.SampleHeight(new Vector3(left,0,top)) + height,top),
+            new Vector3(right,Terrain.SampleHeight(new Vector3(right,0,top)) + height,top),
+            new Vector3(right,Terrain.SampleHeight(new Vector3(right,0,bottom)) + height,bottom),
+            new Vector3(left,Terrain.SampleHeight(new Vector3(left,0,bottom)) + height,bottom),
+             new Vector3(left,Terrain.SampleHeight(new Vector3(left,0,bottom)) + height,top),
+
+        };
+
+        line.SetPositions(positions);
 
     }
 

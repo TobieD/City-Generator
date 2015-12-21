@@ -138,13 +138,13 @@ namespace CityGeneratorWPF.ViewModel
         /// <summary>
         /// Settings of the bounds in which the points will be spawned
         /// </summary>
-        public int Width { get; set; } = 500;
+        public int Width { get; set; } = 1500;
 
-        public int Height { get; set; } = 500;
+        public int Height { get; set; } = 800;
 
-        public int StartX { get; set; } = 250;
+        public int StartX { get; set; } = 100;
 
-        public int StartY { get; set; } = 250;
+        public int StartY { get; set; } = 100;
 
         /// <summary>
         /// Draw Settings
@@ -162,7 +162,7 @@ namespace CityGeneratorWPF.ViewModel
 
         public bool? DrawDistricts { get; set; } = false;
         public bool? DrawRoads { get; set; } = true;
-        public bool? DrawRivers { get; set; } = true;
+        
 
         /// <summary>
         /// algorithm used to generate Delaunay Triangulation
@@ -173,7 +173,7 @@ namespace CityGeneratorWPF.ViewModel
             => Enum.GetValues(typeof (VoronoiAlgorithm)).Cast<VoronoiAlgorithm>();
 
 
-        public PointGenerationAlgorithm PointAlgorithm { get; set; } = PointGenerationAlgorithm.CityLike;
+        public PointGenerationAlgorithm PointAlgorithm { get; set; } = PointGenerationAlgorithm.Simple;
 
         public IEnumerable<PointGenerationAlgorithm> PossiblePointAlgorithms
             => Enum.GetValues(typeof(PointGenerationAlgorithm)).Cast<PointGenerationAlgorithm>();
@@ -181,28 +181,38 @@ namespace CityGeneratorWPF.ViewModel
         public string NewType { get; set; } = "newType";
 
 
-        private GenerationSettings _voronoiSettings;
-        private CitySettings _citySettings;
+        public bool? DebugMode { get; set; } = true;
 
-        private ObservableCollection<DistrictSettings> _DistrictSettings = new ObservableCollection<DistrictSettings>();
-        public ObservableCollection<DistrictSettings> DistrictSettings
+        private bool _bGenerateInnerRoads = false;
+        public bool GenerateInnerRoads
         {
-            get { return _DistrictSettings; }
+            get { return _bGenerateInnerRoads; }
             set
             {
-                _DistrictSettings = value;
+                _bGenerateInnerRoads = value;
                 RaisePropertyChanged();
             }
         }
 
-        private ObservableCollection<RoadSettings> _roadRiverSettings = new ObservableCollection<RoadSettings>();
+        private int _roadSubdivisions = 1;
 
-        public ObservableCollection<RoadSettings> RoadRiverSettings
+        public int RoadSubdivisions
         {
-            get { return _roadRiverSettings; }
+            get { return _roadSubdivisions; }
             set
             {
-                _roadRiverSettings = value;
+                _roadSubdivisions = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        private ObservableCollection<DistrictSettings> _districtSettings = new ObservableCollection<DistrictSettings>();
+        public ObservableCollection<DistrictSettings> DistrictSettings
+        {
+            get { return _districtSettings; }
+            set
+            {
+                _districtSettings = value;
                 RaisePropertyChanged();
             }
         }
@@ -211,7 +221,6 @@ namespace CityGeneratorWPF.ViewModel
         /// Generation Info
         /// </summary>
         private string _generationText;
-
         public string GenerationTimeText
         {
             get { return _generationText; }
@@ -219,32 +228,6 @@ namespace CityGeneratorWPF.ViewModel
             {
                 _generationText = value;
                 RaisePropertyChanged();
-            }
-        }
-
-        //Debug Bindings
-        private int _maxRoadProgress = 0;
-
-        public int MaxRoadProgress
-        {
-            get { return _maxRoadProgress; }
-            set
-            {
-                _maxRoadProgress = value;
-                RaisePropertyChanged();
-            }
-        }
-
-        private int _roadProgress = 0;
-
-        public int RoadProgress
-        {
-            get { return _roadProgress; }
-            set
-            {
-                _roadProgress = value;
-                RaisePropertyChanged();
-                RefreshCanvas();
             }
         }
 
@@ -271,6 +254,8 @@ namespace CityGeneratorWPF.ViewModel
         private VoronoiDiagram _voronoiDiagram;
         private CityData _cityData;
 
+        private GenerationSettings _voronoiSettings;
+        private CitySettings _citySettings;
 
         private Color _baseColor = Colors.OrangeRed;
 
@@ -316,7 +301,6 @@ namespace CityGeneratorWPF.ViewModel
             //seed for random generation
             Seed = DateTime.Now.GetHashCode();
 
-
             //store default settings
             foreach (var districtType in _districtTypes)
             {
@@ -326,17 +310,8 @@ namespace CityGeneratorWPF.ViewModel
 
             RaisePropertyChanged("DistrictSettings");
 
-
-            RoadRiverSettings.Add(_citySettings.RoadSettings);
-
             //debug for math test and drawing
            // MathTesting();
-
-            #if (DEBUG)
-            Seed = 0;
-            UseSeed = true;
-            #endif
-
         }
 
         /// <summary>
@@ -429,7 +404,9 @@ namespace CityGeneratorWPF.ViewModel
 
             //Settings for generation
             _citySettings.DistrictSettings = DistrictSettings.ToList();
-            _citySettings.RoadSettings = RoadRiverSettings[0];
+            _citySettings.GenerateInnerRoads = GenerateInnerRoads;
+            _citySettings.RoadSubdivision = RoadSubdivisions;
+            _citySettings.DebugMode = DebugMode.Value;
 
             //generate city
             var timer = Stopwatch.StartNew();
@@ -518,7 +495,7 @@ namespace CityGeneratorWPF.ViewModel
 
             if (_cityData.Bounds != null)
             {
-                _drawService.DrawRectangle(_cityData.Bounds, Colors.Red);
+                //_drawService.DrawRectangle(_cityData.Bounds, Colors.Red);
             }
 
             //Draw districts

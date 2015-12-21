@@ -13,7 +13,7 @@ namespace CityGenerator
         /// <summary>
         /// Build a road inside a district cell
         /// </summary>
-        public List<Road> BuildRoad(RoadSettings roadSettings,DistrictCell cell)
+        public List<Road> BuildRoad(DistrictCell cell, bool generateInnerRoads, int subdivisions)
         {
             //Edges are the bounds of the road and will be part of the road as well
             var edges = cell.Edges.ToList();
@@ -31,11 +31,13 @@ namespace CityGenerator
             }
 
 
-            if (roadSettings.GenerateInnerRoads)
+            var innerRoads = new List<Road>();
+            if (generateInnerRoads && subdivisions > 0)
             {
-                //Create all the parts of the road
-                roads.AddRange(GenerateRoad(roads, Road.FromLine(longest.Key), Road.FromLine(longest.Value), roadSettings.Branches));
+                //Create another subdivision
+                roads = GenerateRoad(roads, innerRoads, Road.FromLine(longest.Key), Road.FromLine(longest.Value), subdivisions - 1);
             }
+
 
             return roads;
 
@@ -44,21 +46,20 @@ namespace CityGenerator
         /// <summary>
         /// Keep generating roads until branches are zero
         /// </summary>
-        private List<Road> GenerateRoad(List<Road> roads , Road startLine ,Road endLine, int branches)
+        private List<Road> GenerateRoad(List<Road> roads,List<Road> inner , Road startLine ,Road endLine, int branches)
         {
             //find a new start and end point
-            const double min = 0.33;
-            const double max = 1 - min;
-            var start = startLine.FindRandomPointOnLine(min, max);
+            var start = startLine.Center();
             var end = endLine.Center();
 
             //When an intersection occurs break the line     
-            HandlePossibleRoadIntersections(new Line(start,end),startLine,endLine, roads);
+            HandlePossibleRoadIntersections(new Line(start,end),startLine,endLine, roads, inner);
 
             //reduce branches to end recursion
             branches--;
             if (branches + 1 <= 0)
             {
+                roads.AddRange(inner);
                 return roads;
             }
 
@@ -72,7 +73,7 @@ namespace CityGenerator
             }
 
             //generate a new road by connecting 2 roads
-            return GenerateRoad(roads, road1, road2, branches);
+            return GenerateRoad(roads, inner, road1, road2, branches);
         }
 
         private SplitLine FindLongestLineInCell(List<Line> edges)
@@ -86,8 +87,8 @@ namespace CityGenerator
             {
                 for (int y = 1; y < edges.Count; ++y)
                 {
-                    var centerLine1 = edges[x].FindRandomPointOnLine(0.33,0.66);
-                    var centerLine2 = edges[y].FindRandomPointOnLine(0.33,0.66);
+                    var centerLine1 = edges[x].Center();
+                    var centerLine2 = edges[y].Center();
 
                     var distance = MathHelpers.DistanceBetweenPoints(centerLine1, centerLine2);
 
@@ -111,16 +112,16 @@ namespace CityGenerator
             return new SplitLine(e1, e2);
         }
 
-        private void HandlePossibleRoadIntersections(Line line, Road startLine, Road endLine,List<Road> roads)
+        private void HandlePossibleRoadIntersections(Line line, Road startLine, Road endLine,List<Road> borders,List<Road> innerRoads )
         {
             bool flipped = false;
 
             //check for possible intersection, 
             //if an intersection happens the end point becomes the point of intersection
             //has to be reverse because otherwise the lines will intersect with the edges
-            for(var i = roads.Count-1; i> 0; i--)
+            for (var i = 0; i < innerRoads.Count; i++)
             {
-                var l = roads[i];
+                var l = innerRoads[i];
 
                 //if the line intersects
                 if (!line.IntersectsWith(l)) continue;
@@ -133,17 +134,44 @@ namespace CityGenerator
                 if (parallel) continue;
 
                 //Create the new line from the intersection
-                line = CreateIntersectedLine(line,ip,ref flipped);
+                line = CreateIntersectedLine(line, ip, ref flipped);
+
 
                 //Split the line that is intersected with in 2 new lines
-                endLine = roads[i];
+                if (flipped)
+                {
+                    startLine = innerRoads[i];
+                }
+                else
+                {
+                    endLine = innerRoads[i];
+                }
+                
 
                 //stop at the first intersection
                 break;
             }
 
-            //Add the new road
-            roads.Add(Road.FromLine(line));
+            //Because of the new line the start and end line will have to be split in 2 new lines 
+            //the total of new lines will be 3
+
+            //Adjust the borders
+            borders.Remove(startLine);
+            borders.Remove(endLine);
+
+            //create the split lines
+            borders.Add(new Road(startLine.Start,line.Start));
+            borders.Add(new Road(line.Start, startLine.End));
+
+            borders.Add( new Road(endLine.Start, line.End));
+            borders.Add(new Road(line.End, endLine.End));
+
+            //Add the new road to the inner roads
+            innerRoads.Add(Road.FromLine(line));
+
+            innerRoads.Remove(startLine);
+            innerRoads.Remove(endLine);
+
         }
 
         private Line CreateIntersectedLine(Line newLine,Point ip, ref bool flipped)
@@ -160,7 +188,6 @@ namespace CityGenerator
             //swap occurs when the new distance is smaller than 1/3 of the original distance
             flipped = newDistance < (totalDistance*0.33);
             var line = flipped? new Line(ip,end) : new Line(start, ip);
-            
 
             return line;
         }
