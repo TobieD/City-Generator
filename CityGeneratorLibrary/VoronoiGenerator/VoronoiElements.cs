@@ -299,7 +299,6 @@ namespace Voronoi
 
         public void AddPoint(Point p)
         { 
-
             if(Points.Contains(p))
                 return;
 

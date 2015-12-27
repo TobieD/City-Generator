@@ -131,7 +131,7 @@ namespace CityGenerator
                 var ip = line.FindIntersectionPoint(l, ref parallel);
 
                 //parrallel lines don't intersect so ignore
-                if (parallel) continue;
+                if (parallel) continue;     
 
                 //Create the new line from the intersection
                 line = CreateIntersectedLine(line, ip, ref flipped);

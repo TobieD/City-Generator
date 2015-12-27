@@ -28,7 +28,7 @@
         </DockPanel>
 
         <!-- Drawing -->
-        <Canvas MinWidth="700" x:Name="cDrawCanvas" ClipToBounds="True" Grid.Row="1" Grid.Column="0" Grid.RowSpan="2" Background="#FFFFFF" />
+        <Canvas MinWidth="700" x:Name="cDrawCanvas" ClipToBounds="True" Grid.Column="0" Grid.RowSpan="3" Background="#FFFFFF" Margin="-3,19,3,1" />
 
 
         <TabControl Grid.Row="1" Grid.RowSpan="2" Margin="1,0,-1,0" Grid.Column="1">
@@ -90,7 +90,7 @@
                         <Label Content="Circle Radius" Grid.ColumnSpan="1"/>
                         <TextBox Grid.Column="1" Margin="5" Text="{Binding Main.Radius}"/>
                     </Grid>
-                    
+
                     <!--Amount-->
                     <Grid Margin="5,0,0,0">
                         <Grid.ColumnDefinitions>
@@ -216,7 +216,7 @@
                         <Label Content= "Debug Mode" Width="120" Margin="5"/>
                         <CheckBox IsChecked="{Binding Main.DebugMode}" Margin="10"/>
                     </StackPanel>
-                    
+
                     <StackPanel Orientation="Horizontal">
                         <Label Content="Generate inner roads" Width="120" Margin="5"/>
                         <CheckBox IsChecked="{Binding Main.GenerateInnerRoads}" Margin="10"/>
@@ -234,9 +234,6 @@
                         <Button Content="-" Command="{Binding Main.RemoveSettingsCommand}" CommandParameter="{Binding Main.NewType}" Width ="20" Margin="5"/>
 
                     </StackPanel>
-
-
-                   
 
                     <Expander Header="District Settings">
                         <ListView ItemsSource="{Binding Main.DistrictSettings}">
@@ -274,7 +271,7 @@
 
                         </ListView>
                     </Expander>
-                 
+
                     <Label Margin="5,0,0,0" Content="Visualize" FontWeight="Bold"/>
 
                     <Grid Margin="5,0,0,0">
@@ -293,15 +290,6 @@
                         </Grid.ColumnDefinitions>
                         <Label Content="Draw Roads" Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="114"/>
                         <CheckBox Grid.Column="1" IsChecked="{Binding Main.DrawRoads}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Grid>
-
-                    <Grid Margin="5,0,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="23*"/>
-                            <ColumnDefinition Width="17*"/>
-                        </Grid.ColumnDefinitions>
-                        <Label Content="Draw Rivers" Grid.ColumnSpan="2" HorizontalAlignment="Left" Width="114"/>
-                        <CheckBox Grid.Column="1" IsChecked="{Binding Main.DrawRivers}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Grid>
 
 

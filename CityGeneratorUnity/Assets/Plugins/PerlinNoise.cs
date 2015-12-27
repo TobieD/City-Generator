@@ -5,7 +5,7 @@ public class PerlinNoise
 {
 	const int B = 256;
 	int[] m_perm = new int[B+B];
-
+    
 	public PerlinNoise(int seed)
 	{
 		UnityEngine.Random.seed = seed;
@@ -227,6 +227,27 @@ public class PerlinNoise
 		}
 		return sum;
 	}
+
+
+    public Texture2D GetPreviewTexture()
+    {
+        Texture2D perlinTexture = new Texture2D(B,B,TextureFormat.ARGB32, false);
+
+        for (int x = 0; x < B; ++x)
+        {
+            for (int y = 0; y < B; ++y)
+            {
+                var value = m_perm[x + y];
+                float c = value/255f;
+                perlinTexture.SetPixel(x,y,new Color(c,c,c));
+            }
+        }
+
+        perlinTexture.Apply();
+
+
+        return perlinTexture;
+    }
 
 }
 

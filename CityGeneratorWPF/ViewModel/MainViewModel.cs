@@ -311,7 +311,7 @@ namespace CityGeneratorWPF.ViewModel
             RaisePropertyChanged("DistrictSettings");
 
             //debug for math test and drawing
-           // MathTesting();
+            MathTesting();
         }
 
         /// <summary>
@@ -587,37 +587,25 @@ namespace CityGeneratorWPF.ViewModel
 
             //Setup
 
-            var s = new Point(200,700);
-            var e = new Point(500, 350);
-            var l = new Line(s,e);
+            var cell = new Cell();
+            cell.SitePoint = new Point(400,400);
 
-            var fp = new Point(50,550);
+            cell.AddPoint(new Point(250,100));
+            cell.AddPoint(new Point(100, 400));
+            cell.AddPoint(new Point(300, 800));
+            cell.AddPoint(new Point(200, 650));
+            cell.AddPoint(new Point(700, 800));
 
-            _drawService.DrawLine(l,Colors.Black,3);
-            _drawService.DrawPoint(e, 7, Colors.Black);
-            _drawService.DrawPoint(s,7,Colors.Black);
-            _drawService.DrawPoint(fp, 7, Colors.Black);
+            var newCell = cell.Inset(100);
 
-            var offset = l.GenerateOffsetParallelTowardsPoint(20, fp);
-//            _drawService.DrawLine(offset, Colors.Black, 1);
-
-            double minDistance = 2;
-            var width = 10;
-            double totalDistance = offset.Length();
-            double currentDistance = minDistance + width; //Start with an offset
             
-            while(currentDistance < totalDistance - (minDistance + width))
+
+            _drawService.DrawCell(cell,Color.FromArgb(127,127,127,127),true,true);
+            _drawService.DrawCell(newCell, Color.FromArgb(180, 180, 180, 255), true, true);
+
+            foreach (var p in newCell.GenerateRandomPoints(20))
             {
-
-                var percentage = currentDistance/totalDistance;
-
-                var ps = offset.FindRandomPointOnLine(percentage,percentage);
-                _drawService.DrawPoint(ps, 7, Colors.Black);
-
-                //In unity the width should be the width of the prefab
-                width = RandomHelper.RandomInt(10, 50);
-
-                currentDistance += (minDistance + width);
+                _drawService.DrawPoint(p, 10, Colors.Red);
             }
 
         }

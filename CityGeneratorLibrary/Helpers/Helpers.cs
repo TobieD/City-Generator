@@ -822,6 +822,41 @@ namespace Helpers
 
             return area;
         }
+
+
+        public static Cell Inset(this Cell cell,int amount)
+        {
+
+            var insetCell = new Cell();
+            insetCell.SitePoint = cell.SitePoint; //normally the site point should remain
+            var c = cell.Center();
+
+            //for every point of the cell move the point with the amount towards the center of the cell
+            foreach (var p in cell.Points)
+            {
+                var yDiff = Math.Abs(p.Y - c.Y);
+                var xDiff = Math.Abs(p.X - c.X);
+                var distance = Math.Sqrt(Power(yDiff) + Power(xDiff));
+                var unit = new Point(xDiff/distance,yDiff/distance);
+                var newP = Point.Zero;
+
+                var scaleX = p.X >= c.X ? -1 : 1;
+                var scaleY = p.Y >= c.Y ? -1 : 1;
+
+
+                unit.X *= scaleX;
+                unit.Y *= scaleY;
+
+                newP.X = p.X + unit.X*amount;
+                newP.Y = p.Y + unit.Y * amount;
+
+                insetCell.AddPoint(newP);
+            }
+
+
+            return insetCell;
+        }
+
         #endregion
 
         #region Algorithms
@@ -1007,8 +1042,11 @@ namespace Helpers
         /// </summary>
         public static List<Point> GenerateRandomPoints(this Cell cell, int amount)
         {
+            //Do an inset to avoid spawning points on the edges
+            var newCell = cell.Inset(100);
+
             //Easier to take random points inside a triangle than a cell, so first triangulate the cell
-            var triangles = new BowyerWatsonGenerator().DelaunayTriangulation(cell.Points);
+            var triangles = new BowyerWatsonGenerator().DelaunayTriangulation(newCell.Points);
 
             var points = new List<Point>();
             for (int i = 0; i < amount; i++)

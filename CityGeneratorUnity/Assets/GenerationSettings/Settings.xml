@@ -2,46 +2,55 @@
 <Settings>
   <Generation>
     <UseSeed>false</UseSeed>
-    <Seed>0</Seed>
+    <Seed>-1761971931</Seed>
     <Width>150</Width>
     <Length>150</Length>
-    <StartX>0</StartX>
-    <StartY>0</StartY>
+    <StartX>-75</StartX>
+    <StartY>-75</StartY>
     <Amount>20</Amount>
-    <Point>1</Point>
+    <Point>0</Point>
     <Voronoi>1</Voronoi>
-    <Parent></Parent>
+    <Parent>Town</Parent>
   </Generation>
   <Terrain>
     <Splatmaps>
       <Splatmap ID="0" Tiling="2">Assets/Resources/Textures/Terrain/Brick.png</Splatmap>
       <Splatmap ID="1" Tiling="2">Assets/Resources/Textures/Terrain/grass01.tga</Splatmap>
       <Splatmap ID="2" Tiling="2">Assets/Resources/Textures/Terrain/dirt01.tga</Splatmap>
-      <Splatmap ID="3" Tiling="2">Assets/Resources/Textures/Terrain/Cracked_Earth.png</Splatmap>
+      <Splatmap ID="3" Tiling="2">Assets/Resources/Textures/Terrain/Wavy_Sand.png</Splatmap>
     </Splatmaps>
     <Trees>
-      <Tree>Assets/Resources/Prefabs/Tree01.prefab</Tree>
-      <Tree>Assets/Resources/Prefabs/Tree02.prefab</Tree>
+      <Tree>Assets/Resources/Prefabs/Tree_01.prefab</Tree>
+      <Tree>Assets/Resources/Prefabs/Pine_tree.prefab</Tree>
     </Trees>
     <Props>
-      <Prop>Assets/Resources/Prefabs/Prop_Billboard.prefab</Prop>
-      <Prop>Assets/Resources/Prefabs/Prop_Bin.prefab</Prop>
-      <Prop>Assets/Resources/Prefabs/Prop_Dumpster.prefab</Prop>
+      <Prop>Assets/Resources/Prefabs/Chest.prefab</Prop>
+      <Prop>Assets/Resources/Prefabs/Barrel 1.prefab</Prop>
+      <Prop>Assets/Resources/Prefabs/well.prefab</Prop>
     </Props>
-    <GrassDetail>
-      <Grass>Assets/Resources/Textures/Trees/grassmesh.tga</Grass>
-    </GrassDetail>
+    <Details>
+      <detail Type="0">Assets/Resources/Textures/Trees/grassmesh.tga</detail>
+      <detail Type="1">Assets/Resources/Prefabs/Rock_4.prefab</detail>
+    </Details>
   </Terrain>
   <Districts>
-    <Grass>
+    <Village>
       <Frequency>2</Frequency>
       <Size>0.5</Size>
       <Offset>5</Offset>
       <Interval>10</Interval>
       <Buildings>
-        <Building ID="0">Assets/Resources/Prefabs/Building_Apartment.prefab</Building>
-        <Building ID="1">Assets/Resources/Prefabs/store_small_drug.prefab</Building>
+        <Building ID="0">Assets/Resources/Prefabs/House_Wood.prefab</Building>
       </Buildings>
-    </Grass>
+    </Village>
+    <Shops>
+      <Frequency>2</Frequency>
+      <Size>0.5</Size>
+      <Offset>5</Offset>
+      <Interval>10</Interval>
+      <Buildings>
+        <Building ID="0">Assets/Resources/Prefabs/Baker_house.prefab</Building>
+      </Buildings>
+    </Shops>
   </Districts>
 </Settings>
