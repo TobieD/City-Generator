@@ -136,9 +136,9 @@ namespace CityGeneratorWPF.Service
 
         public void DrawTriangle(Point p1, Point p2, Point p3, Color c)
         {
-            DrawLine(p1, p2, c);
-            DrawLine(p3, p2, c);
-            DrawLine(p1, p3, c);
+            DrawLine(p1, p2, c,2);
+            DrawLine(p3, p2, c,2);
+            DrawLine(p1, p3, c,2);
 
         }
 
@@ -288,7 +288,7 @@ namespace CityGeneratorWPF.Service
                     foreach (var road in cell.Roads)
                     {
                         //roadColor = Extensions.Extensions.RandomColor(false,225);
-                        DrawRoad(road, roadColor, Colors.Red, Colors.Aqua, true,1);
+                        DrawRoad(road, roadColor, Colors.Red, Colors.Aqua, false,3);
                     }
                 }
 
@@ -313,7 +313,7 @@ namespace CityGeneratorWPF.Service
             var pc = Color.FromRgb(50,50,50);
             foreach (var building in road.Buildings)
             {
-                DrawPoint(building, 5, pc);
+                DrawPoint(building, 4, pc);
 
                 //Draw bounds of the building
                 //DrawRectangle(building,building.Width,building.Height,pc);

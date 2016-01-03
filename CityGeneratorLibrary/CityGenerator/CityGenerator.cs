@@ -12,7 +12,7 @@ namespace CityGenerator
         public bool GenerateInnerRoads = false;
         public int RoadSubdivision = 1; //  best limitied to 2
 
-        public bool DebugMode = true;
+        public bool DebugMode = false;
     }
 
     public class DistrictSettings

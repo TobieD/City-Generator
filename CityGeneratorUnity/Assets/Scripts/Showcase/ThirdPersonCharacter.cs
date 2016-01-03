@@ -16,7 +16,6 @@ public class ThirdPersonCharacter : MonoBehaviour
 	void Start ()
 	{
 	    _rigidBody = GetComponent<Rigidbody>();
-	    _rigidBody.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
 
 	    _animation = GetComponent<Animation>();
 

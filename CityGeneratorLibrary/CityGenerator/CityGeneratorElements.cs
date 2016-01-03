@@ -11,6 +11,7 @@ namespace CityGenerator
     { 
         //districts
         public List<District> Districts;
+
         public Rectangle Bounds;
 
         public CityData()
@@ -30,6 +31,7 @@ namespace CityGenerator
     public class BuildingSite : Point
     {
 
+        public Road ParentRoad;
         public int Width;
         public int Height;
 
@@ -40,6 +42,7 @@ namespace CityGenerator
             Width = 15;
             Height = 15;
             UserData = null;
+            ParentRoad = null;
         }
         
 
@@ -57,6 +60,7 @@ namespace CityGenerator
     {
         //spots possible buildings will be spawned
         public List<BuildingSite> Buildings;
+        public DistrictCell ParentCell;
 
         public Road(Point start,Point end):base(start, end)
         {

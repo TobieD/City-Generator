@@ -1043,15 +1043,28 @@ namespace Helpers
         public static List<Point> GenerateRandomPoints(this Cell cell, int amount)
         {
             //Do an inset to avoid spawning points on the edges
-            var newCell = cell.Inset(100);
 
             //Easier to take random points inside a triangle than a cell, so first triangulate the cell
-            var triangles = new BowyerWatsonGenerator().DelaunayTriangulation(newCell.Points);
+            var triangles = new BowyerWatsonGenerator().DelaunayTriangulation(cell.Points);
 
             var points = new List<Point>();
-            for (int i = 0; i < amount; i++)
+
+            if (triangles.Count < 1)
             {
-                points.AddRange(triangles.Select(triangle => triangle.RandomPointInTriangle()));
+                return points;
+            }
+
+            var perTriangle = amount/triangles.Count;
+            
+            //for every triangle take the amount of points
+            for (int i = 0; i < perTriangle; i++)
+            {
+                foreach (var t in triangles)
+                {
+                    var p = t.RandomPointInTriangle();
+                    points.Add(p);
+                }
+
             }
 
             return points;

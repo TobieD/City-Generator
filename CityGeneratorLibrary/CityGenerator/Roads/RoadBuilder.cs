@@ -27,9 +27,10 @@ namespace CityGenerator
             foreach (var edge in cell.Edges)
             {
                 //add the original side edge
-                roads.Add(Road.FromLine(edge));
-            }
+                var road = Road.FromLine(edge);
 
+                roads.Add(road);
+            }
 
             var innerRoads = new List<Road>();
             if (generateInnerRoads && subdivisions > 0)
@@ -38,6 +39,11 @@ namespace CityGenerator
                 roads = GenerateRoad(roads, innerRoads, Road.FromLine(longest.Key), Road.FromLine(longest.Value), subdivisions - 1);
             }
 
+            //set up a reference to the parent cell
+            foreach (var road in roads)
+            {
+                road.ParentCell = cell;
+            }
 
             return roads;
 

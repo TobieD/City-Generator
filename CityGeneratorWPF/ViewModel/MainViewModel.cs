@@ -13,6 +13,7 @@ using Helpers;
 using Microsoft.Win32;
 using Points;
 using Voronoi;
+using Voronoi.Algorithms;
 
 namespace CityGeneratorWPF.ViewModel
 {
@@ -90,7 +91,7 @@ namespace CityGeneratorWPF.ViewModel
         /// <summary>
         /// Amount of points to generate
         /// </summary>
-        private int _pointsToGenerate = 150;
+        private int _pointsToGenerate = 350;
 
         public int PointsToGenerate
         {
@@ -138,13 +139,13 @@ namespace CityGeneratorWPF.ViewModel
         /// <summary>
         /// Settings of the bounds in which the points will be spawned
         /// </summary>
-        public int Width { get; set; } = 1500;
+        public int Width { get; set; } = 1250;
 
-        public int Height { get; set; } = 800;
+        public int Height { get; set; } = 600;
 
-        public int StartX { get; set; } = 100;
+        public int StartX { get; set; } = 200;
 
-        public int StartY { get; set; } = 100;
+        public int StartY { get; set; } = 200;
 
         /// <summary>
         /// Draw Settings
@@ -420,6 +421,44 @@ namespace CityGeneratorWPF.ViewModel
             //update canvas
             RefreshCanvas();
 
+            //InsetTesting
+            var insetCells = new List<Cell>();
+            var points = new List<Point>();
+
+            foreach (var d in _cityData.Districts)
+            {
+                foreach (var c in d.Cells)
+                {
+                    var cInset = c.Inset(20);
+                    insetCells.Add(cInset);
+                    //_drawService.DrawCell(c, Color.FromArgb(255, 120, 120, 120), true, true);
+                    points.AddRange(cInset.GenerateRandomPoints(9));
+                }
+            }
+
+
+
+            ////Draw
+
+            foreach (var c in insetCells)
+            {
+                //_drawService.DrawCell(c, Color.FromArgb(255, 188, 188, 188), true, true);
+
+                //Draw Triangulation
+                var triangles = new BowyerWatsonGenerator().DelaunayTriangulation(c.Points);
+                foreach (var t in triangles)
+                {
+                    //_drawService.DrawTriangle(t, Colors.CornflowerBlue);
+                }
+
+            }
+
+            foreach (var p in points)
+            {
+                _drawService.DrawPoint(p, 4, Colors.OrangeRed);
+            }
+
+
         }
 
         /// <summary>
@@ -591,21 +630,25 @@ namespace CityGeneratorWPF.ViewModel
             cell.SitePoint = new Point(400,400);
 
             cell.AddPoint(new Point(250,100));
-            cell.AddPoint(new Point(100, 400));
-            cell.AddPoint(new Point(300, 800));
-            cell.AddPoint(new Point(200, 650));
-            cell.AddPoint(new Point(700, 800));
+            cell.AddPoint(new Point(700, 300));
+            cell.AddPoint(new Point(400, 500));
+            cell.AddPoint(new Point(150, 300));
+            cell.AddPoint(new Point(100, 200));
 
-            var newCell = cell.Inset(100);
-
+            var newCell = cell.Inset(50);
             
+           // _drawService.DrawCell(cell,Color.FromArgb(255,100, 100, 100),true,true);
+           // _drawService.DrawCell(newCell, Color.FromArgb(255, 180, 180, 180), true, true);
 
-            _drawService.DrawCell(cell,Color.FromArgb(127,127,127,127),true,true);
-            _drawService.DrawCell(newCell, Color.FromArgb(180, 180, 180, 255), true, true);
+            var triangles = new BowyerWatsonGenerator().DelaunayTriangulation(newCell.Points);
+            foreach (var t in triangles)
+            {
+                //_drawService.DrawTriangle(t, Colors.CornflowerBlue);
+            }
 
             foreach (var p in newCell.GenerateRandomPoints(20))
             {
-                _drawService.DrawPoint(p, 10, Colors.Red);
+                //_drawService.DrawPoint(p, 5, Colors.Red);
             }
 
         }

@@ -2,55 +2,70 @@
 <Settings>
   <Generation>
     <UseSeed>false</UseSeed>
-    <Seed>-1761971931</Seed>
-    <Width>150</Width>
-    <Length>150</Length>
+    <Seed>1284088270</Seed>
+    <Width>250</Width>
+    <Length>250</Length>
     <StartX>-75</StartX>
     <StartY>-75</StartY>
-    <Amount>20</Amount>
+    <Amount>25</Amount>
     <Point>0</Point>
     <Voronoi>1</Voronoi>
     <Parent>Town</Parent>
   </Generation>
   <Terrain>
     <Splatmaps>
-      <Splatmap ID="0" Tiling="2">Assets/Resources/Textures/Terrain/Brick.png</Splatmap>
-      <Splatmap ID="1" Tiling="2">Assets/Resources/Textures/Terrain/grass01.tga</Splatmap>
-      <Splatmap ID="2" Tiling="2">Assets/Resources/Textures/Terrain/dirt01.tga</Splatmap>
-      <Splatmap ID="3" Tiling="2">Assets/Resources/Textures/Terrain/Wavy_Sand.png</Splatmap>
+      <Splatmap ID="0" Tiling="2">Assets/Resources/Textures/Terrain/Brick_01.png</Splatmap>
+      <Splatmap ID="1" Tiling="2">Assets/Resources/Textures/Terrain/Grass_01.tga</Splatmap>
+      <Splatmap ID="2" Tiling="2">Assets/Resources/Textures/Terrain/Dirt_03.png</Splatmap>
+      <Splatmap ID="3" Tiling="2">Assets/Resources/Textures/Terrain/Sand_03.png</Splatmap>
     </Splatmaps>
     <Trees>
-      <Tree>Assets/Resources/Prefabs/Tree_01.prefab</Tree>
-      <Tree>Assets/Resources/Prefabs/Pine_tree.prefab</Tree>
+      <Tree>Assets/Resources/Prefabs/Trees/Tree_01.prefab</Tree>
+      <Tree>Assets/Resources/Prefabs/Trees/Pine_tree.prefab</Tree>
     </Trees>
     <Props>
-      <Prop>Assets/Resources/Prefabs/Chest.prefab</Prop>
-      <Prop>Assets/Resources/Prefabs/Barrel 1.prefab</Prop>
-      <Prop>Assets/Resources/Prefabs/well.prefab</Prop>
+      <Prop>Assets/Resources/Prefabs/Props/WoodenCrate.prefab</Prop>
+      <Prop>Assets/Resources/Prefabs/Props/Chest.prefab</Prop>
+      <Prop>Assets/Resources/Prefabs/Props/well.prefab</Prop>
+      <Prop>Assets/Resources/Prefabs/Props/Barrel 1.prefab</Prop>
     </Props>
     <Details>
       <detail Type="0">Assets/Resources/Textures/Trees/grassmesh.tga</detail>
-      <detail Type="1">Assets/Resources/Prefabs/Rock_4.prefab</detail>
     </Details>
+    <Lakes generate="true">
+      <lake>Assets/Resources/Prefabs/Water.prefab</lake>
+    </Lakes>
   </Terrain>
   <Districts>
     <Village>
-      <Frequency>2</Frequency>
+      <Frequency>6</Frequency>
       <Size>0.5</Size>
       <Offset>5</Offset>
       <Interval>10</Interval>
       <Buildings>
-        <Building ID="0">Assets/Resources/Prefabs/House_Wood.prefab</Building>
+        <Building ID="0">Assets/Resources/Prefabs/Houses/House_Wood.prefab</Building>
+        <Building ID="1">Assets/Resources/Prefabs/Houses/Baker_house.prefab</Building>
       </Buildings>
     </Village>
     <Shops>
-      <Frequency>2</Frequency>
-      <Size>0.5</Size>
+      <Frequency>1</Frequency>
+      <Size>0.27700001001358032</Size>
       <Offset>5</Offset>
       <Interval>10</Interval>
       <Buildings>
-        <Building ID="0">Assets/Resources/Prefabs/Baker_house.prefab</Building>
+        <Building ID="0">Assets/Resources/Prefabs/Houses/Tavern.prefab</Building>
+        <Building ID="1">Assets/Resources/Prefabs/Houses/Baker_house.prefab</Building>
       </Buildings>
     </Shops>
+    <Tents>
+      <Frequency>1</Frequency>
+      <Size>0.20399999618530273</Size>
+      <Offset>5</Offset>
+      <Interval>10</Interval>
+      <Buildings>
+        <Building ID="0">Assets/Resources/Prefabs/Houses/Tent_01.prefab</Building>
+        <Building ID="1">Assets/Resources/Prefabs/Houses/Tent_02.prefab</Building>
+      </Buildings>
+    </Tents>
   </Districts>
 </Settings>

@@ -1,0 +1,59 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<Settings>
+  <Generation>
+    <UseSeed>false</UseSeed>
+    <Seed>-1398172246</Seed>
+    <Width>150</Width>
+    <Length>150</Length>
+    <StartX>-75</StartX>
+    <StartY>-75</StartY>
+    <Amount>20</Amount>
+    <Point>0</Point>
+    <Voronoi>1</Voronoi>
+    <Parent>Town</Parent>
+  </Generation>
+  <Terrain>
+    <Splatmaps>
+      <Splatmap ID="0" Tiling="2">Assets/Resources/Textures/Terrain/Stone_01.png</Splatmap>
+      <Splatmap ID="1" Tiling="2">Assets/Resources/Textures/Terrain/Grass_02.png</Splatmap>
+      <Splatmap ID="2" Tiling="2">Assets/Resources/Textures/Terrain/Dirt_01.tga</Splatmap>
+      <Splatmap ID="3" Tiling="2">Assets/Resources/Textures/Terrain/Sand_03.png</Splatmap>
+    </Splatmaps>
+    <Trees>
+      <Tree>Assets/Resources/Prefabs/Trees/Tree_01.prefab</Tree>
+      <Tree>Assets/Resources/Prefabs/Trees/Pine_tree.prefab</Tree>
+    </Trees>
+    <Props>
+      <Prop>Assets/Resources/Prefabs/Props/WoodenCrate.prefab</Prop>
+      <Prop>Assets/Resources/Prefabs/Props/Chest.prefab</Prop>
+      <Prop>Assets/Resources/Prefabs/Props/well.prefab</Prop>
+      <Prop>Assets/Resources/Prefabs/Props/Well 2.prefab</Prop>
+      <Prop>Assets/Resources/Prefabs/Props/Barrel 1.prefab</Prop>
+    </Props>
+    <Details>
+      <detail Type="0">Assets/Resources/Textures/Trees/grassmesh.tga</detail>
+      <detail Type="0">Assets/Resources/Textures/Terrain/Grass.tif</detail>
+    </Details>
+  </Terrain>
+  <Districts>
+    <Village>
+      <Frequency>2</Frequency>
+      <Size>0.5</Size>
+      <Offset>5</Offset>
+      <Interval>10</Interval>
+      <Buildings>
+        <Building ID="0">Assets/Resources/Prefabs/Houses/House_Wood.prefab</Building>
+      </Buildings>
+    </Village>
+    <Shops>
+      <Frequency>2</Frequency>
+      <Size>0.5</Size>
+      <Offset>5</Offset>
+      <Interval>10</Interval>
+      <Buildings>
+        <Building ID="0">Assets/Resources/Prefabs/Houses/Tavern.prefab</Building>
+        <Building ID="1">Assets/Resources/Prefabs/Houses/Baker_house.prefab</Building>
+      </Buildings>
+    </Shops>
+  </Districts>
+</Settings>

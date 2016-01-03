@@ -54,15 +54,52 @@ namespace CityGenerator
                 //generate roads inside the district cell
                 dc.Roads = _roadBuilder.BuildRoad(dc, _citySettings.GenerateInnerRoads, _citySettings.RoadSubdivision);
 
-                //Generate random positions inside the 
 
+                //create buildings on each road
+                foreach (var road in dc.Roads)
+                {
+                    CreateBuildingOnRoad(road);
+                }
 
+                //debug mode only generates one full cell
                 if(_citySettings.DebugMode)
                     break;
+
 
             }
 
             return district;
+        }
+
+        private void CreateBuildingOnRoad(Road road)
+        {
+            var cell = road.ParentCell;
+            const int offset = 6;
+            const float minDistance = 0.5f;
+
+            //Create an offset line of this road towards the inside of the cell
+            var offsetLine = road.GenerateOffsetParallelTowardsPoint(offset, cell.SitePoint);
+
+            //calculate total length of the line
+            var length = offsetLine.Length();
+            var traveled = minDistance;
+
+            //keep repeating until the end is reached
+            while (traveled < length - minDistance)
+            {
+                //get point on line using normalized values [0,1]
+                var pc = traveled / length;
+                var pos = offsetLine.FindRandomPointOnLine(pc, pc);
+
+                //Create a building site from this point
+                var bs = BuildingSite.FromPoint(pos);
+                bs.ParentRoad = road;
+                road.Buildings.Add(bs);
+
+
+                //travel along the line using the width of the building site
+                traveled += (minDistance + bs.Width / 2);
+            }
         }
 
         private List<DistrictCell> GenerateDistrictCells(VoronoiDiagram voronoi)
