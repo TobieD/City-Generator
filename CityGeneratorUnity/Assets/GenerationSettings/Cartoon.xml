@@ -1,0 +1,61 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<Settings>
+  <Generation>
+    <UseSeed>false</UseSeed>
+    <Seed>2118551914</Seed>
+    <Width>150</Width>
+    <Length>150</Length>
+    <StartX>-75</StartX>
+    <StartY>-75</StartY>
+    <Amount>20</Amount>
+    <Point>0</Point>
+    <Voronoi>1</Voronoi>
+    <Parent>Town</Parent>
+  </Generation>
+  <Terrain>
+    <Splatmaps>
+      <Splatmap ID="0" Tiling="2">Assets/Resources_Cartoon/Textures/Terrain/Brick_01.png</Splatmap>
+      <Splatmap ID="1" Tiling="2">Assets/Resources_Cartoon/Textures/Terrain/Grass_01.tga</Splatmap>
+      <Splatmap ID="2" Tiling="2">Assets/Resources_Cartoon/Textures/Terrain/Dirt_03.png</Splatmap>
+      <Splatmap ID="3" Tiling="2">Assets/Resources_Cartoon/Textures/Terrain/Sand_03.png</Splatmap>
+    </Splatmaps>
+    <Trees>
+      <Tree>Assets/Resources_Cartoon/Prefabs/Trees/Tree_01.prefab</Tree>
+      <Tree>Assets/Resources_Cartoon/Prefabs/Trees/Pine_tree.prefab</Tree>
+    </Trees>
+    <Props>
+      <Prop>Assets/Resources_Cartoon/Prefabs/Props/WoodenCrate.prefab</Prop>
+      <Prop>Assets/Resources_Cartoon/Prefabs/Props/Chest.prefab</Prop>
+      <Prop>Assets/Resources_Cartoon/Prefabs/Props/well.prefab</Prop>
+      <Prop>Assets/Resources_Cartoon/Prefabs/Props/Barrel 1.prefab</Prop>
+    </Props>
+    <Details>
+      <detail Type="0">Assets/Resources_Cartoon/Textures/Trees/grassmesh.tga</detail>
+    </Details>
+    <Lakes generate="false">
+      <lake>Assets/Resources_Cartoon/Prefabs/Water.prefab</lake>
+    </Lakes>
+  </Terrain>
+  <Districts>
+    <Village>
+      <Frequency>6</Frequency>
+      <Size>0.5</Size>
+      <Offset>5</Offset>
+      <Interval>10</Interval>
+      <Buildings>
+        <Building ID="0">Assets/Resources_Cartoon/Prefabs/Houses/House_Wood.prefab</Building>
+        <Building ID="1">Assets/Resources_Cartoon/Prefabs/Houses/Baker.prefab</Building>
+      </Buildings>
+    </Village>
+    <Shops>
+      <Frequency>1</Frequency>
+      <Size>0.27700001001358032</Size>
+      <Offset>5</Offset>
+      <Interval>10</Interval>
+      <Buildings>
+        <Building ID="0">Assets/Resources_Cartoon/Prefabs/Houses/Tavern.prefab</Building>
+        <Building ID="1">Assets/Resources_Cartoon/Prefabs/Houses/Baker_house.prefab</Building>
+      </Buildings>
+    </Shops>
+  </Districts>
+</Settings>

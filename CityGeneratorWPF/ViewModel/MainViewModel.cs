@@ -436,8 +436,6 @@ namespace CityGeneratorWPF.ViewModel
                 }
             }
 
-
-
             ////Draw
 
             foreach (var c in insetCells)

@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<Settings>
+  <Generation>
+    <UseSeed>false</UseSeed>
+    <Seed>-725038509</Seed>
+    <Width>150</Width>
+    <Length>150</Length>
+    <StartX>-75</StartX>
+    <StartY>-75</StartY>
+    <Amount>20</Amount>
+    <Point>0</Point>
+    <Voronoi>1</Voronoi>
+    <Parent>Town</Parent>
+  </Generation>
+  <Terrain>
+    <Splatmaps>
+      <Splatmap ID="0" Tiling="2">Assets/Resources_Realistic/Textures/Terrain/Ground_Gravel_1024_01_DIFF.png</Splatmap>
+      <Splatmap ID="1" Tiling="2">Assets/Resources_Realistic/Textures/Terrain/Ground_Grass_1024_02_DIF.png</Splatmap>
+      <Splatmap ID="2" Tiling="2">Assets/Resources_Realistic/Textures/Terrain/Ground_Dirt_1024_01_DIF.png</Splatmap>
+    </Splatmaps>
+    <Trees>
+      <Tree>Assets/Resources_Realistic/Prefabs/Vegetation/SmallSavannaA.prefab</Tree>
+      <Tree>Assets/Resources_Realistic/Prefabs/Vegetation/SmallSavannaB.prefab</Tree>
+      <Tree>Assets/Resources_Realistic/Prefabs/Vegetation/TreeAcaciaA.prefab</Tree>
+      <Tree>Assets/Resources_Realistic/Prefabs/Vegetation/TreeAcaciaB.prefab</Tree>
+    </Trees>
+    <Props>
+      <Prop>Assets/Resources_Realistic/Prefabs/Props/Barrel_01.prefab</Prop>
+      <Prop>Assets/Resources_Realistic/Prefabs/Props/Barrel_02.prefab</Prop>
+      <Prop>Assets/Resources_Realistic/Prefabs/Props/Box_01.prefab</Prop>
+    </Props>
+    <Details>
+      <detail Type="0">Assets/Resources_Realistic/Textures/Trees/weeds_01_d.tga</detail>
+    </Details>
+    <Lakes generate="false">
+      <lake></lake>
+    </Lakes>
+  </Terrain>
+  <Districts>
+    <Houses>
+      <Frequency>2</Frequency>
+      <Size>0.5</Size>
+      <Offset>5</Offset>
+      <Interval>10</Interval>
+      <Buildings>
+        <Building ID="0">Assets/Resources_Realistic/Prefabs/Building/Building_05.prefab</Building>
+        <Building ID="1">Assets/Resources_Realistic/Prefabs/Building/Shed.prefab</Building>
+      </Buildings>
+    </Houses>
+    <Towers>
+      <Frequency>1</Frequency>
+      <Size>0.5</Size>
+      <Offset>5</Offset>
+      <Interval>10</Interval>
+      <Buildings>
+        <Building ID="0">Assets/Resources_Realistic/Prefabs/Building/Tower.prefab</Building>
+        <Building ID="1">Assets/Resources_Realistic/Prefabs/Building/Building_Big.prefab</Building>
+        <Building ID="2">Assets/Resources_Realistic/Prefabs/Building/Building_05.prefab</Building>
+      </Buildings>
+    </Towers>
+  </Districts>
+</Settings>

@@ -27,7 +27,7 @@ public class CharacterSpawner : MonoBehaviour
             return;;
         }
 
-        var pos = terrain.RandomPositionOnTerrain();
+        var pos = RandomPositionOnTerrain(terrain);
         pos.y += FallHeight;
 
         //move gameobject
@@ -41,5 +41,20 @@ public class CharacterSpawner : MonoBehaviour
             RandomizeSpawn();
         }
     }
-	
+
+    private Vector3 RandomPositionOnTerrain(Terrain terrain, int offset = 0)
+    {
+        var terrainPos = terrain.transform.position;
+        var size = terrain.terrainData.size;
+
+        var pos = Vector3.zero;
+        pos.x = Random.Range(terrainPos.x + offset, terrainPos.x + size.x - offset);
+        pos.z = Random.Range(terrainPos.z + offset, terrainPos.z + size.z - offset);
+
+        pos.y = terrain.SampleHeight(pos);
+
+        return pos;
+    }
+
+
 }

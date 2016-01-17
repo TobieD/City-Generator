@@ -3,7 +3,7 @@ using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace Assets.Editor
+namespace Tools.TownGenerator
 {
     public class TerrainEditor
     {
@@ -373,7 +373,7 @@ namespace Assets.Editor
             var spacing = windowWidth * 0.05f;
             var buttonWidth = windowWidth / 2 - spacing;
 
-            Settings.AdditionalProps = EditorGUILayout.IntSlider("Amount to spawn", Settings.AdditionalProps, 20, 80);
+            Settings.AdditionalProps = EditorGUILayout.IntSlider("Amount to spawn", Settings.AdditionalProps, 20, 200);
             
             //Selected Tree GUI
             EditorGUILayout.BeginHorizontal(GUILayout.Width(windowWidth), GUILayout.Height(20));

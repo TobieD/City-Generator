@@ -2,12 +2,12 @@
 <Settings>
   <Generation>
     <UseSeed>false</UseSeed>
-    <Seed>1284088270</Seed>
-    <Width>250</Width>
-    <Length>250</Length>
+    <Seed>1643878219</Seed>
+    <Width>150</Width>
+    <Length>150</Length>
     <StartX>-75</StartX>
     <StartY>-75</StartY>
-    <Amount>25</Amount>
+    <Amount>20</Amount>
     <Point>0</Point>
     <Voronoi>1</Voronoi>
     <Parent>Town</Parent>
@@ -32,7 +32,7 @@
     <Details>
       <detail Type="0">Assets/Resources/Textures/Trees/grassmesh.tga</detail>
     </Details>
-    <Lakes generate="true">
+    <Lakes generate="false">
       <lake>Assets/Resources/Prefabs/Water.prefab</lake>
     </Lakes>
   </Terrain>
@@ -44,7 +44,7 @@
       <Interval>10</Interval>
       <Buildings>
         <Building ID="0">Assets/Resources/Prefabs/Houses/House_Wood.prefab</Building>
-        <Building ID="1">Assets/Resources/Prefabs/Houses/Baker_house.prefab</Building>
+        <Building ID="1">Assets/Resources/Prefabs/Houses/Baker.prefab</Building>
       </Buildings>
     </Village>
     <Shops>
@@ -57,15 +57,5 @@
         <Building ID="1">Assets/Resources/Prefabs/Houses/Baker_house.prefab</Building>
       </Buildings>
     </Shops>
-    <Tents>
-      <Frequency>1</Frequency>
-      <Size>0.20399999618530273</Size>
-      <Offset>5</Offset>
-      <Interval>10</Interval>
-      <Buildings>
-        <Building ID="0">Assets/Resources/Prefabs/Houses/Tent_01.prefab</Building>
-        <Building ID="1">Assets/Resources/Prefabs/Houses/Tent_02.prefab</Building>
-      </Buildings>
-    </Tents>
   </Districts>
 </Settings>
